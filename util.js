@@ -171,11 +171,16 @@ export function gridDistribution(w, h = null) {
         h = w;
     }
     const dimensions = {x: w, y: h};
+
+    const maxIndex = {
+        x: w === 1 ? 1 : w - 1,
+        y: h === 1 ? 1 : h - 1,
+    };
     const points = [];
     for (let i = 0; i < w*h; i++) {
         const index = {x: i % w, y: Math.floor(i / w)}
-        const x = index.x / (w - 1);
-        const y = index.y / (h - 1);
+        const x = index.x / maxIndex.x;
+        const y = index.y / maxIndex.y;
         const centeredIndex = subtract(index, scale(subtract(dimensions, {x: 1, y: 1}), 1/2));
         const centered = {x: lerp(-1, 1, x), y: lerp(-1, 1, y), index: centeredIndex};
         points.push({x, y, index, centered});
