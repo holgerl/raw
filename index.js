@@ -108,9 +108,12 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
     Raw.map = map;
     Raw.distance = distance;
     Raw.length = length;
+    Raw.scale = scale;
     Raw.normalize = normalize;
     Raw.random = random;
     Raw.randomInt = randomInt;
+
+    Raw.gridDistribution = gridDistribution;
     
     Raw.collision = Collision;
 
@@ -409,6 +412,9 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         // TODO: Dette burde være en vector med navn dimensions eller size:
         Raw.width = canvas.width / ratio;
         Raw.height = canvas.height / ratio;
+
+        Raw.topLeft = {x: -Raw.width/2, y: -Raw.height/2};
+        Raw.bottomRight = {x: Raw.width/2, y: Raw.height/2};
     };
 
     function setMouseFromEvent(event) {
