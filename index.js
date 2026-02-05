@@ -390,9 +390,13 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
 
         canvas.width = canvas.parentElement.clientWidth * ratio;
         canvas.height = canvas.parentElement.clientHeight * ratio;
-        canvas.style.width = "inherit";
+        canvas.style.width = "inherit"; // To fill parent
         canvas.style.height = "inherit";
-        canvas.style.display = "block";
+        canvas.style.display = "block"; // To not be inline
+
+        // For dragging:
+        canvas.style.touchAction = "none";
+        canvas.style.userSelect = "none";
 
         Raw.scenegraph.object.hitbox = [
             {x: -canvas.width / ratio / 2, y: -canvas.height / ratio / 2},
@@ -408,92 +412,130 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
     };
 
     function setMouseFromEvent(event) {
-        const offsetX = event.offsetX || event.touches[0].clientX;
-        const offsetY = event.offsetY || event.touches[0].clientY;
+        const offsetX = event.offsetX || event.touches[0] && event.touches[0].clientX;
+        const offsetY = event.offsetY || event.touches[0] && event.touches[0].clientY;
 
+        // TODO: Rename til Raw.pointer
         Raw.mouse.x = offsetX - canvas.width / window.devicePixelRatio / 2;
         Raw.mouse.y = offsetY - canvas.height / window.devicePixelRatio / 2;
+    }
 
-        // TODO: Tror ikke jeg tar hensyn til leave events her:
-        if (event.type === "mousedown" || event.type === "touchstart" || event.type === "touchmove") {
-            Raw.mouse.down = true;
-        } else if (event.type === "mouseup" || event.type === "touchend") {
-            Raw.mouse.down = false;
+    function onMouseDown(event) {
+        setMouseFromEvent(event);
+        Raw.mouse.down = true;
+        let targetNode = null;
+
+        traverse(Raw.scenegraph, (node) => {
+            if (node.globalHitbox) {
+                const globalHitbox = node.globalHitbox;
+                const globalMouse = {
+                    x: event.offsetX || event.touches[0].clientX,
+                    y: event.offsetY || event.touches[0].clientY,
+                };
+                if (globalMouse.x >= globalHitbox[0].x && globalMouse.x <= globalHitbox[1].x &&
+                    globalMouse.y >= globalHitbox[0].y && globalMouse.y <= globalHitbox[1].y) {
+                    targetNode = node;
+                }
+            }
+        });
+
+        if (Raw.settings.debug) console.log("Mouse down:", Raw.mouse.x, Raw.mouse.y, targetNode.id);
+
+        // TODO: Rename onmousedown på noden til onpointerdown osv for alle eventer
+        if (targetNode && targetNode.object.onmousedown) {
+            targetNode.object.onmousedown.call(targetNode, event);
         }
+
+        dragDown(event);
+    }
+
+    function onMouseUp(event) {
+        setMouseFromEvent(event);
+        Raw.mouse.down = false;
+
+        traverse(Raw.scenegraph, (node) => {
+            const obj = node.object;
+            if (obj && obj.onmouseup) {
+                obj.onmouseup.call(node, Raw.mouse.x, Raw.mouse.y, event);
+            }
+        });
+
+        dragUp(event);
+    }
+
+    function onMouseMove(event) {
+        setMouseFromEvent(event);
+
+        traverse(Raw.scenegraph, (node) => {
+            const obj = node.object;
+            if (obj && obj.onmousemove) {
+                obj.onmousemove.call(node, Raw.mouse.x, Raw.mouse.y, event);
+            }
+        });
+
+        dragMove(event);
+    }
+
+    const drag = {
+        active: false,
+        pointerId: null,
+        target: null,
+        offsetX: 0,
+        offsetY: 0
+    };
+
+    Raw.startDrag = function(node) {
+        drag.active = true;
+        drag.target = node.position;
+    }
+
+    function dragDown(e) {
+        if (!drag.active) return;
+
+        canvas.setPointerCapture(e.pointerId);
+
+        const pos = {
+            x: e.clientX,
+            y: e.clientY,
+        };
+        
+        drag.pointerId = e.pointerId;
+        
+        drag.offsetX = pos.x - drag.target.x;
+        drag.offsetY = pos.y - drag.target.y;
+    }
+
+    function dragMove(e) {
+        if (!drag.active || e.pointerId !== drag.pointerId) return;
+
+        const pos = {
+            x: e.clientX,
+            y: e.clientY,
+        };
+
+        drag.target.x = pos.x - drag.offsetX;
+        drag.target.y = pos.y - drag.offsetY;
+    }
+
+    function dragUp(e) {
+        if (e.pointerId !== drag.pointerId) return;
+
+        drag.active = false;
+        drag.pointerId = null;
+        drag.target = null;
     }
 
     Raw.init = function(containerElement) {
         canvas = document.createElement("canvas");
 
-        function onMouseDown(event) {
-            setMouseFromEvent(event);
-            let targetNode = null;
-            traverse(Raw.scenegraph, (node) => {
-                if (node.globalHitbox) {
-                    const globalHitbox = node.globalHitbox;
-                    const globalMouse = {
-                        x: event.offsetX || event.touches[0].clientX,
-                        y: event.offsetY || event.touches[0].clientY,
-                    };
-                    if (globalMouse.x >= globalHitbox[0].x && globalMouse.x <= globalHitbox[1].x &&
-                        globalMouse.y >= globalHitbox[0].y && globalMouse.y <= globalHitbox[1].y) {
-                        targetNode = node;
-                    }
-                }
-            });
+        // TODO: Rename alle disse til pointerXX
+        canvas.addEventListener("pointerdown", onMouseDown);
 
-            if (Raw.settings.debug) console.log("Mouse down:", Raw.mouse.x, Raw.mouse.y, targetNode.id);
-
-            if (targetNode && targetNode.object.onmousedown) {
-                targetNode.object.onmousedown.call(targetNode, event);
-            }
-        }
-
-        function onMouseUp(event) {
-            setMouseFromEvent(event);
-
-            traverse(Raw.scenegraph, (node) => {
-                const obj = node.object;
-                if (obj && obj.onmouseup) {
-                    obj.onmouseup.call(node, Raw.mouse.x, Raw.mouse.y, event);
-                }
-            });
-        }
-
-        function onMouseLeave(event) {
-            Raw.mouse.x = null;
-            Raw.mouse.y = null;
-
-            traverse(Raw.scenegraph, (node) => {
-                const obj = node.object;
-                if (obj && obj.onmouseleave) {
-                    obj.onmouseleave.call(node, event);
-                }
-            });
-        }
-
-        // TODO: Hvilke elementer skal få onMouseMove, onMouseLeave og onMouseUp event? Nå får alle det, men det er kanskje bare de som har musen over seg?
-        function onMouseMove(event) {
-            setMouseFromEvent(event);
-
-            traverse(Raw.scenegraph, (node) => {
-                const obj = node.object;
-                if (obj && obj.onmousemove) {
-                    obj.onmousemove.call(node, Raw.mouse.x, Raw.mouse.y, event);
-                }
-            });
-        }
-
-        canvas.addEventListener("mousedown", onMouseDown);
-        canvas.addEventListener("mouseup", onMouseUp);
-        canvas.addEventListener("touchend", onMouseUp);
-        canvas.addEventListener("mouseleave", onMouseLeave);
         canvas.addEventListener("pointerup", onMouseUp);
-        document.addEventListener("visibilitychange", () => {
-            document.hidden && onMouseLeave();
-        })
-        canvas.addEventListener("mousemove", onMouseMove);
-        canvas.addEventListener("touchmove", onMouseMove);
+        canvas.addEventListener('pointercancel', onMouseUp);
+        canvas.addEventListener('lostpointercapture', onMouseUp);
+
+        canvas.addEventListener("pointermove", onMouseMove);
 
         containerElement.appendChild(canvas);
 
