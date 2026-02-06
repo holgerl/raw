@@ -459,12 +459,26 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         setMouseFromEvent(event);
         Raw.mouse.down = false;
 
+        let targetNode = null;
+
+        // TODO: DRY med onMouseDown
         traverse(Raw.scenegraph, (node) => {
-            const obj = node.object;
-            if (obj && obj.onmouseup) {
-                obj.onmouseup.call(node, Raw.mouse.x, Raw.mouse.y, event);
+            if (node.globalHitbox) {
+                const globalHitbox = node.globalHitbox;
+                const globalMouse = {
+                    x: event.offsetX || event.touches[0].clientX,
+                    y: event.offsetY || event.touches[0].clientY,
+                };
+                if (globalMouse.x >= globalHitbox[0].x && globalMouse.x <= globalHitbox[1].x &&
+                    globalMouse.y >= globalHitbox[0].y && globalMouse.y <= globalHitbox[1].y) {
+                    targetNode = node;
+                }
             }
         });
+
+        if (targetNode && targetNode.object.onmouseup) {
+            targetNode.object.onmouseup.call(targetNode, event);
+        }
 
         dragUp(event);
     }
@@ -536,12 +550,11 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
 
         // TODO: Rename alle disse til pointerXX
         canvas.addEventListener("pointerdown", onMouseDown);
-
         canvas.addEventListener("pointerup", onMouseUp);
-        canvas.addEventListener('pointercancel', onMouseUp);
-        canvas.addEventListener('lostpointercapture', onMouseUp);
-
         canvas.addEventListener("pointermove", onMouseMove);
+        canvas.addEventListener('pointercancel', dragUp);
+        canvas.addEventListener('lostpointercapture', dragUp);
+
 
         containerElement.appendChild(canvas);
 
