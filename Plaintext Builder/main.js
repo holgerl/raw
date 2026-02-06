@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const entryFile = path.resolve("../index.js");
-const outputFile = path.resolve("../../Nationaltheatret/raw-canvas/bundle.js");
+const entryFile = path.resolve(process.argv[2] || "../index.js");
+const outputFile = path.resolve(process.argv[3] || "../../Nationaltheatret/raw-canvas/bundle.js");
 const visited = new Set();
 let output = "";
 
