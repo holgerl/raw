@@ -395,13 +395,6 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
 
         canvas.width = canvas.parentElement.clientWidth * ratio;
         canvas.height = canvas.parentElement.clientHeight * ratio;
-        canvas.style.width = "inherit"; // To fill parent
-        canvas.style.height = "inherit";
-        canvas.style.display = "block"; // To not be inline
-
-        // For dragging:
-        canvas.style.touchAction = "none";
-        canvas.style.userSelect = "none";
 
         Raw.scenegraph.object.hitbox = [
             {x: -canvas.width / ratio / 2, y: -canvas.height / ratio / 2},
@@ -557,6 +550,15 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         canvas.addEventListener('pointercancel', dragUp);
         canvas.addEventListener('lostpointercapture', dragUp);
 
+
+        canvas.style.width = "inherit"; // To fill parent
+        canvas.style.height = "inherit";
+        canvas.style.display = "block"; // To not be inline
+
+        // For dragging:
+        canvas.style.touchAction = "none";
+        canvas.style.userSelect = "none";
+        document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
         containerElement.appendChild(canvas);
 
