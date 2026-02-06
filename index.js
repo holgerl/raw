@@ -105,6 +105,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
     Raw.cosineWave = cosineWave;
     Raw.lerp = lerp;
     Raw.clamp = clamp;
+    Raw.fromTo = fromTo;
     Raw.map = map;
     Raw.distance = distance;
     Raw.length = length;
@@ -174,6 +175,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
                 parent: parent,
                 children: [],
                 add: this.add,
+                remove: () => parent.children.splice(parent.children.indexOf(this), 1),
             };
 
             // TODO: Hitbox bør kunne være enten
