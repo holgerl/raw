@@ -38,9 +38,8 @@ function vectorToAngularVelocity(vector, pointA, pointB) {
     }
 
     function addNode(properties) {
-        const node = {...properties,
-            remove: () => nodes.splice(nodes.indexOf(this), 1),
-        };
+        const node = {...properties};
+        node.remove = () => nodes.splice(nodes.indexOf(node), 1);
         nodes.push(node);
         return node;
     }
