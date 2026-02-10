@@ -393,6 +393,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         requestAnimationFrame(frameLoop);
     };
 
+    // TODO: Litt DRY med den under:
     Raw.bringToFront = function(node) {
         if (!node.parent) return;
         
@@ -401,6 +402,17 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         if (index >= 0) {
             siblings.splice(index, 1);
             siblings.push(node);
+        }
+    };
+
+    Raw.bringToBack = function(node) {
+        if (!node.parent) return;
+        
+        const siblings = node.parent.children;
+        const index = siblings.indexOf(node);
+        if (index >= 0) {
+            siblings.splice(index, 1);
+            siblings.unshift(node);
         }
     };
 
