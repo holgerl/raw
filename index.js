@@ -113,6 +113,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
     Raw.normalize = normalize;
     Raw.random = random;
     Raw.randomInt = randomInt;
+    Raw.bodyCenter = bodyCenter;
 
     Raw.gridDistribution = gridDistribution;
     
@@ -213,7 +214,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         clearColor: null, // null betyr transparent vha clearRect, ikke fillRect
     };
 
-    Raw.timer = function({lengthSeconds, onStart = () => {}, onEnd = () => {}}) {
+    Raw.timer = function({lengthSeconds = 2147483, onStart = () => {}, onEnd = () => {}} = {}) {
         let lastRunMillis, startedAtMillis, id;
         let counter = 0;
         let remainingSeconds = lengthSeconds;
@@ -239,6 +240,10 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
                 id = clearTimeout(id);
                 remainingSeconds -= (performance.now() - lastRunMillis) / 1000;
             },
+            end() { 
+                this.reset();
+                onEndWrapper(); 
+            },
             resume() { run(); },
             reset() { 
                 id = clearTimeout(id); 
@@ -261,6 +266,14 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
                 return clamp(relativeAge, 0, 1); 
             },
             running() { return !!id; },
+            elapsedSeconds() {
+                if (!startedAtMillis) return 0;
+                if (id) {
+                    return (performance.now() - startedAtMillis) / 1000;
+                } else {
+                    return lengthSeconds - remainingSeconds;
+                }
+            },
         };
     }
 
