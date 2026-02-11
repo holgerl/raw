@@ -353,6 +353,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
                         obj.collisionNode.position = copy(globalPosition)
                     }
 
+                    // TODO: hitbox for museklikke antar jo AABB. men for collision.js antar den en liste av punkter. Bør være likt. Kanskje museklikk bare bruker collision.js også
                     if (obj.hitbox) {
                         const hitbox = node.object.hitbox.map(corner => 
                             obj.origin ? subtract(corner, obj.origin) : corner
@@ -393,6 +394,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         requestAnimationFrame(frameLoop);
     };
 
+    // TODO: Skal sånne ting være en funksjon på noden heller? Gjelder flere ting som f.eks. Raw.startDrag
     // TODO: Litt DRY med den under:
     Raw.bringToFront = function(node) {
         if (!node.parent) return;
@@ -527,9 +529,9 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         offsetY: 0
     };
 
-    Raw.startDrag = function(node) {
+    Raw.startDrag = function(target) {
         drag.active = true;
-        drag.target = node.position;
+        drag.target = target;
     }
 
     function dragDown(e) {
