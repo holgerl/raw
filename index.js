@@ -421,9 +421,9 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
 
         console.log("Resizing canvas:", canvas.parentElement.clientWidth, canvas.parentElement.clientHeight, ratio);
 
-        canvas.width = canvas.parentElement.clientWidth * ratio;
         canvas.height = canvas.parentElement.clientHeight * ratio;
-
+        canvas.width = canvas.parentElement.clientWidth * ratio;
+        
         Raw.scenegraph.object.hitbox = [
             {x: -canvas.width / ratio / 2, y: -canvas.height / ratio / 2},
             {x: canvas.width / ratio / 2, y: canvas.height / ratio / 2},
