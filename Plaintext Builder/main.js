@@ -6,7 +6,7 @@ const outputFile = path.resolve(process.argv[3] || "../../Nationaltheatret/raw-c
 const visited = new Set();
 let output = "";
 
-const WATCH_DIR = path.resolve("../");
+const WATCH_DIR = path.dirname(entryFile);
 
 function minifyJS(code) {
     const strings = [];
