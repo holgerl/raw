@@ -114,6 +114,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
     Raw.random = random;
     Raw.randomInt = randomInt;
     Raw.bodyCenter = bodyCenter;
+    Raw.pretty = pretty;
 
     Raw.gridDistribution = gridDistribution;
     

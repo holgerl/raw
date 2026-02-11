@@ -187,3 +187,9 @@ export function gridDistribution(w, h = null) {
     }
     return points;
 }
+
+function pretty(vector, decimals = 2, length = 4) {
+    return String(vector.x.toFixed(decimals)).padStart(length, " ")
+            + ","
+            + String(vector.y.toFixed(decimals)).padStart(length, " ");
+}
