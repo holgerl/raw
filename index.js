@@ -586,7 +586,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         // For dragging:
         canvas.style.touchAction = "none";
         canvas.style.userSelect = "none";
-        document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+        canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
         containerElement.appendChild(canvas);
 
