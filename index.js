@@ -477,8 +477,6 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         if (targetNode && targetNode.object.onmousedown) {
             targetNode.object.onmousedown.call(targetNode, event);
         }
-
-        dragDown(event);
     }
 
     function onMouseUp(event) {
@@ -530,14 +528,14 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         offsetY: 0
     };
 
-    Raw.startDrag = function(target) {
+    Raw.startDrag = function(target, event) {
         drag.active = true;
         drag.target = target;
+
+        dragDown(event);
     }
 
     function dragDown(e) {
-        if (!drag.active) return;
-
         canvas.setPointerCapture(e.pointerId);
 
         const pos = {
