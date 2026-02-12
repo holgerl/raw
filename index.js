@@ -419,13 +419,13 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         }
     };
 
-    Raw.resize = function() {
+    Raw.resize = function(width = canvas.parentElement.clientWidth, height = canvas.parentElement.clientHeight) {
         const ratio = window.devicePixelRatio || 1;
 
-        console.log("Resizing canvas:", canvas.parentElement.clientWidth, canvas.parentElement.clientHeight, ratio);
+        console.log("Resizing canvas:", width, height, ratio);
 
-        canvas.height = canvas.parentElement.clientHeight * ratio;
-        canvas.width = canvas.parentElement.clientWidth * ratio;
+        canvas.height = height * ratio;
+        canvas.width = width * ratio;
         
         Raw.scenegraph.object.hitbox = [
             {x: -canvas.width / ratio / 2, y: -canvas.height / ratio / 2},
@@ -608,7 +608,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         ctx.shadowBlur = 0;
 
         Raw.resize();
-        window.addEventListener("resize", Raw.resize);
+        window.addEventListener("resize", (event) => Raw.resize());
         
         requestAnimationFrame(frameLoop); // TODO: Dette bør kanskje brukeren av Raw gjøre selv, og så er hele frameLoop() heller tilgjengelig for brukeren å kalle selv i sin animationFrame
     }
