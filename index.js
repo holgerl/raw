@@ -456,6 +456,15 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
     }
 
     function onMouseDown(event) {
+        const isPrimaryClick =
+            event.button === 0 &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.shiftKey &&
+            !event.altKey;
+
+        if (!isPrimaryClick) return;
+
         setMouseFromEvent(event);
         Raw.mouse.down = true;
         let targetNode = null;
