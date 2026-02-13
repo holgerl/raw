@@ -610,13 +610,6 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         // eller tegne pixelart med ctx.imageSmoothingEnabled = false
         //Raw.sketchyAccessToCtx = ctx;
 
-        // Performance settings:
-        ctx.imageSmoothingEnabled = false;
-        ctx.globalCompositeOperation = "source-over";
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = 1;
-        ctx.shadowBlur = 0;
-
         Raw.resize();
         window.addEventListener("resize", (event) => Raw.resize());
         
