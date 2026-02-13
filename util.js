@@ -104,11 +104,20 @@ export function scale(vector, scalar) {
 }
 
 export function add(vectorA, vectorB) {
-    return {x: vectorA.x + vectorB.x, y: vectorA.y + vectorB.y};
+    return {x: vectorA.x + vectorB.x, y: vectorA.y + vectorB.y, z: vectorA.z + vectorB.z};
 }
 
+// TODO: Gjør slik at alle vektorfunksjoner støtter 3D
 export function subtract(vectorA, vectorB) {
-    return {x: vectorA.x - vectorB.x, y: vectorA.y - vectorB.y};
+    return {x: vectorA.x - vectorB.x, y: vectorA.y - vectorB.y, z: vectorA.z - vectorB.z};
+}
+
+export function cross(vectorA, vectorB) {
+  const normalX = vectorA.y * vectorB.z - vectorA.z * vectorB.y;
+  const normalY = vectorA.z * vectorB.x - vectorA.x * vectorB.z;
+  const normalZ = vectorA.x * vectorB.y - vectorA.y * vectorB.x;
+
+  return { x: normalX, y: normalY, z: normalZ };
 }
 
 export function fromTo(from, to) {
