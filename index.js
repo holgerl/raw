@@ -489,7 +489,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
             }
         });
 
-        if (Raw.settings.debug) console.log("Mouse down:", Raw.mouse.x, Raw.mouse.y, targetNode.id);
+        if (Raw.settings.debug) console.log("Mouse down:", Raw.mouse.x, Raw.mouse.y, targetNode && targetNode.id);
 
         // TODO: Rename onmousedown på noden til onpointerdown osv for alle eventer
         if (targetNode && targetNode.object.onmousedown) {
