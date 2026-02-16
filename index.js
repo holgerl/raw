@@ -203,7 +203,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
                     // TODO: Dette gjør jo at man aldri kan ha en body med bare to punkter, som kan være nyttig for å lage en linje-grense
                     const hitboxWidth = (object.hitbox[1].x - object.hitbox[0].x);
                     object.collisionNode = Raw.collision.addPoint(
-                        {id: node.id, position: {x:0, y:0}, radius: hitboxWidth/2, oncollision}
+                        {id: node.id, position: {x:0, y:0}, radius: hitboxWidth/2, oncollision, group: object.collisionGroup, affectedByGroups: object.collisionAffectedByGroups}
                     );
                 } else {
                     // Antar liste med punkter for et polygon

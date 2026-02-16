@@ -58,8 +58,8 @@ function vectorToAngularVelocity(vector, pointA, pointB) {
         return addNode({...body,
             type: "body",
             // TODO: Trenger et konsept om static: true som gjør at kun farten til den andre som kolliderer blir reflektert på flatenormalen 
-            group: 0, // TODO: parameter
-            affectedByGroups: [0], // TODO: parameter
+            group: body.group || 0,
+            affectedByGroups: body.affectedByGroups || [0],
             points: body.points || [],
             // TODO: beregn geometrisk senter som all rotasjon kommer til å være rundt:
             center: {x: 0, y: 0},
