@@ -130,6 +130,14 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         target: {speed: 0.05},
     };
 
+    function updateCamera() {
+        Raw.camera.zoom = Math.min(Raw.camera.zoom, 0.99999);
+        Raw.camera.scale = 1/(1 - Raw.camera.zoom);
+
+        Raw.topLeft = Raw.scale({x: -Raw.width/2, y: -Raw.height/2}, 1/Raw.camera.scale);
+        Raw.bottomRight = Raw.scale({x: Raw.width/2, y: Raw.height/2}, 1/Raw.camera.scale);
+    }
+
     Raw.scenegraph = {
         id: 'root',
         object: { // TODO: Rename til data, og bruk den kun for data, ikke funksjoner som transform
@@ -153,13 +161,12 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
                 }
                 const translate = subtract(center, Raw.camera.position);
 
-                Raw.camera.zoom = Math.min(Raw.camera.zoom, 0.99999);
-                const scale = 1/(1 - Raw.camera.zoom);
+                updateCamera();
 
                 // TODO: Dette blir ikke riktig når scale og translate gjøres sammen. Må nok bruke pivot riktig slik som i scenegraph ellers
                 ctx.translate(translate.x, translate.y);
                 ctx.rotate(Raw.camera.rotation);
-                ctx.scale(scale, scale);
+                ctx.scale(Raw.camera.scale, Raw.camera.scale);
             },
         },
         // TODO: Origin burde jo også ligge her. Og det er jo dumt at så mange interne verdier ligger på object.
@@ -442,8 +449,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         Raw.width = canvas.width / ratio;
         Raw.height = canvas.height / ratio;
 
-        Raw.topLeft = {x: -Raw.width/2, y: -Raw.height/2};
-        Raw.bottomRight = {x: Raw.width/2, y: Raw.height/2};
+        updateCamera();
     };
 
     function setMouseFromEvent(event) {
