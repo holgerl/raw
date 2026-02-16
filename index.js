@@ -271,7 +271,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
                 remainingSeconds = lengthSeconds;
                 this.start();
             },
-            counter() { return counter; },
+            counter() { return counter; }, // TODO: Kalle denne phase, og så la den være 0 før det starter, og så øke til 1 ved start. Da blir det mer sekvensielle faser
             value() { // TODO: value fortsetter å gå når man pauser
                 const relativeAge = (performance.now() - startedAtMillis) / lengthSeconds / 1000;
                 return clamp(relativeAge, 0, 1); 
@@ -362,6 +362,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
                     if (obj.collisionNode) {
                         const globalPosition = scale(matrix.transformPoint(node.object.position), 1/window.devicePixelRatio);
                         obj.collisionNode.position = copy(globalPosition)
+                        obj.collisionNode.rotation = node.rotation;
                     }
 
                     // TODO: hitbox for museklikke antar jo AABB. men for collision.js antar den en liste av punkter. Bør være likt. Kanskje museklikk bare bruker collision.js også
