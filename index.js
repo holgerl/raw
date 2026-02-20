@@ -175,6 +175,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         rotation: 0,
         scale: {x: 1, y: 1},
         target: {speed: 0.05},
+        visible: true,
         children: [],
         add: function(object = {}, parent = this) {
             const node = {
@@ -184,6 +185,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
                 rotation: 0,
                 scale: {x: 1, y: 1},
                 target: {speed: 0.05},
+                visible: true,
                 parent: parent,
                 children: [],
                 add: this.add,
@@ -477,7 +479,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         let targetNode = null;
 
         traverse(Raw.scenegraph, (node) => {
-            if (node.globalHitbox) {
+            if (node.globalHitbox && node.visible) {
                 const globalHitbox = node.globalHitbox;
                 const globalMouse = {
                     x: event.offsetX || event.touches[0].clientX,
