@@ -1,4 +1,3 @@
-// const Raw = {}; TODO: Få bundleren til å lage slike namespaces og legge alt som er export inn der
 // TODO: properties-navn tar faktisk veldig mye av minifisert kode. Kan de være kortere?
 
 const Raw = (function () {
@@ -6,6 +5,12 @@ const Raw = (function () {
 
     // #include "./util.js"
     // #include "./collision.js"
+
+    Object.assign(Raw, {
+        lerp, clamp, fromTo, map, distance, copy, add, subtract, scale, cross, normalize, random, randomInt, bodyCenter, 
+        gridDistribution, traverse, triangleWave, easeInOutWave, easeInWave, easeOutWave, easeOutCubicWave, sineWave, cosineWave, 
+        collision: Collision 
+    })
 
     let canvas, ctx;
     let lastTimeMillis = performance.now();
@@ -95,35 +100,6 @@ const Raw = (function () {
     Raw.timeSeconds = 0;
     Raw.deltaSeconds = 0;
     Raw.mouse = {x: null, y: null};
-
-    Raw.traverse = traverse;
-
-    Raw.triangleWave = triangleWave;
-    Raw.easeInOutWave = easeInOutWave;
-    Raw.easeInWave = easeInWave;
-    Raw.easeOutWave = easeOutWave;
-    Raw.easeOutCubicWave = easeOutCubicWave;
-    Raw.sineWave = sineWave;
-    Raw.cosineWave = cosineWave;
-    Raw.lerp = lerp;
-    Raw.clamp = clamp;
-    Raw.fromTo = fromTo;
-    Raw.map = map;
-    Raw.distance = distance;
-    Raw.length = length;
-    Raw.scale = scale;
-    Raw.normalize = normalize;
-    Raw.copy = copy;
-    Raw.add = add;
-    Raw.subtract = subtract;
-    Raw.cross = cross;
-    Raw.random = random;
-    Raw.randomInt = randomInt;
-    Raw.bodyCenter = bodyCenter;
-    Raw.pretty = pretty;
-    Raw.gridDistribution = gridDistribution;
-
-    Raw.collision = Collision;
 
     Raw.camera = {
         position: {x: 0, y: 0}, // TODO: Sett default til midt på canvas, i stedet for å alltid gjør offset i transform-funksjonen

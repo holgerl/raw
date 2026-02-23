@@ -41,8 +41,6 @@ function includer(file) {
             path.dirname(file),
             filePath
         );
-
-        console.log(`Found include: ${match} -> ${resolved}`);
         
         const processedContent = includer(resolved);
         return processedContent;
