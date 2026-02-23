@@ -34,7 +34,6 @@ const Raw = (function () {
         if (fpsDeltaMillis >= 100) { // update every x milliseconds
             fps = (fpsCounter / fpsDeltaMillis) * 1000;
             Raw.fps = Math.round(fps);
-            //console.log("FPS:", Raw.fps);
             fpsCounter = 0;
             fpsLastTimeMillis = timeMillis;
         }
@@ -120,6 +119,7 @@ const Raw = (function () {
         id: 'root',
         object: { // TODO: Rename til data, og bruk den kun for data, ikke funksjoner som transform
             update: function() {
+                // TODO: Dette er av flere eksempler hvor en lokal variabel i stedet for Raw.camera sparer mye plass i minifisert kode. 
                 if (Raw.camera.target.zoom !== undefined) {
                     Raw.camera.zoom = Raw.lerp(Raw.camera.zoom, Raw.camera.target.zoom, Raw.camera.target.speed);
                 }
@@ -387,10 +387,7 @@ const Raw = (function () {
     };
 
     // TODO: Skal sånne ting være en funksjon på noden heller? Gjelder flere ting som f.eks. Raw.startDrag
-    // TODO: Litt DRY med den under:
     Raw.bringToFront = function(node) {
-        if (!node.parent) return;
-        
         const siblings = node.parent.children;
         const index = siblings.indexOf(node);
         if (index >= 0) {
@@ -400,8 +397,6 @@ const Raw = (function () {
     };
 
     Raw.bringToBack = function(node) {
-        if (!node.parent) return;
-        
         const siblings = node.parent.children;
         const index = siblings.indexOf(node);
         if (index >= 0) {
@@ -442,20 +437,8 @@ const Raw = (function () {
         Raw.mouse.y = offsetY - canvas.height / window.devicePixelRatio / 2;
     }
 
-    function onMouseDown(event) {
-        const isPrimaryClick =
-            event.button === 0 &&
-            !event.ctrlKey &&
-            !event.metaKey &&
-            !event.shiftKey &&
-            !event.altKey;
-
-        if (!isPrimaryClick) return;
-
-        setMouseFromEvent(event);
-        Raw.mouse.down = true;
+    function findNodeAtMouse(event) {
         let targetNode = null;
-
         traverse(Raw.scenegraph, (node) => {
             if (node.globalHitbox && node.visible) {
                 const globalHitbox = node.globalHitbox;
@@ -469,6 +452,23 @@ const Raw = (function () {
                 }
             }
         });
+        return targetNode;
+    }
+
+    function onMouseDown(event) {
+        const isPrimaryClick =
+            event.button === 0 &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.shiftKey &&
+            !event.altKey;
+
+        if (!isPrimaryClick) return;
+
+        setMouseFromEvent(event);
+        Raw.mouse.down = true;
+        
+        const targetNode = findNodeAtMouse(event);
 
         if (Raw.settings.debug) console.log("Mouse down:", Raw.mouse.x, Raw.mouse.y, targetNode && targetNode.id);
 
@@ -482,26 +482,11 @@ const Raw = (function () {
         setMouseFromEvent(event);
         Raw.mouse.down = false;
 
-        let targetNode = null;
-
-        // TODO: DRY med onMouseDown
-        traverse(Raw.scenegraph, (node) => {
-            if (node.globalHitbox) {
-                const globalHitbox = node.globalHitbox;
-                const globalMouse = {
-                    x: event.offsetX || event.touches[0].clientX,
-                    y: event.offsetY || event.touches[0].clientY,
-                };
-                if (globalMouse.x >= globalHitbox[0].x && globalMouse.x <= globalHitbox[1].x &&
-                    globalMouse.y >= globalHitbox[0].y && globalMouse.y <= globalHitbox[1].y) {
-                    targetNode = node;
-                }
-            }
-        });
+        const targetNode = findNodeAtMouse(event);
 
         if (targetNode && targetNode.object.onmouseup) {
             targetNode.object.onmouseup.call(targetNode, event);
-        }
+        }        
 
         dragUp(event);
     }
