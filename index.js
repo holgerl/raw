@@ -1,10 +1,12 @@
-// TODO: Disse blir jo liggende i globalt scope:
-import { lerp, clamp, map, distance, length, normalize, triangleWave, sineWave, cosineWave, easeInWave, easeOutWave, easeOutCubicWave, easeInOutWave, random, randomInt } from "./util";
-import { _ } from "./collision";
+// const Raw = {}; TODO: Få bundleren til å lage slike namespaces og legge alt som er export inn der
+// TODO: properties-navn tar faktisk veldig mye av minifisert kode. Kan de være kortere?
 
-const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt som er export inn der
+const Raw = (function () {
+    const Raw = {};
 
-(function () {
+    // #include "./util.js"
+    // #include "./collision.js"
+
     let canvas, ctx;
     let lastTimeMillis = performance.now();
     let frameCount = 0;
@@ -111,6 +113,7 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
     Raw.length = length;
     Raw.scale = scale;
     Raw.normalize = normalize;
+    Raw.copy = copy;
     Raw.add = add;
     Raw.subtract = subtract;
     Raw.cross = cross;
@@ -118,9 +121,8 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
     Raw.randomInt = randomInt;
     Raw.bodyCenter = bodyCenter;
     Raw.pretty = pretty;
-
     Raw.gridDistribution = gridDistribution;
-    
+
     Raw.collision = Collision;
 
     Raw.camera = {
@@ -624,4 +626,6 @@ const Raw = {}; // TODO: Få bundleren til å lage slike namespaces og legge alt
         
         requestAnimationFrame(frameLoop); // TODO: Dette bør kanskje brukeren av Raw gjøre selv, og så er hele frameLoop() heller tilgjengelig for brukeren å kalle selv i sin animationFrame
     }
+
+    return Raw;
 })();

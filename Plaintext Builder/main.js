@@ -25,61 +25,49 @@ function minifyJS(code) {
     return code.replace(/__STR(\d+)__/g, (_, i) => strings[i]);
 }
 
-function bundle(file) {
-    console.log(`Bundling ${file}`);
+function includer(file) {
+    console.log(`Including ${file}`);
 
     file = path.resolve(file);
     if (visited.has(file)) return;
     visited.add(file);
 
-    let code = fs.readFileSync(file, "utf8");
+    const code = fs.readFileSync(file, "utf8");
 
-    // Find import statements
-    const importRegex = /import\s+.*?from\s+["'](.+?)["'];?/g;
-    let match;
+    const regex = /[ \t]*(\/\/)?[ \t]*#include "(.+)"/g;
 
-    while ((match = importRegex.exec(code))) {
-        let importPath = match[1];
+    const processed = code.replace(regex, (match, _, filePath) => {
+        const resolved = path.resolve(
+            path.dirname(file),
+            filePath
+        );
 
-        if (importPath.startsWith(".")) {
-            let resolved = path.resolve(
-                path.dirname(file),
-                importPath + ".js"
-            );
-            bundle(resolved);
-        }
-    }
+        console.log(`Found include: ${match} -> ${resolved}`);
+        
+        const processedContent = includer(resolved);
+        return processedContent;
+    })
 
-    // Remove imports and exports
-    code = code
-        .replace(importRegex, "")
-        .replace(/export\s+/g, "");
-
-    output += "\n" + code;
+    return processed;
 }
 
-function bundleAll() {
+function build() {
     visited.clear();
     output = "";
 
-    // Run bundler
-    bundle(entryFile);
-
-    // Optional IIFE wrapper
-    // TODO: wrap ting og eksponer exported greier i et namespace
-    //output = `(function () {\n${output}\n})();`;
+    output = includer(entryFile);
 
     //output = minifyJS(output);
 
     fs.writeFileSync(outputFile, output);
 
-    console.log("Bundled into", outputFile);
+    console.log("Built into", outputFile);
 }
 
 function onChange(filePath, eventType) {
     console.log(`File changed: ${filePath} (${eventType})`);
     
-    bundleAll();
+    build();
 }
 
 // Initial watch
@@ -91,5 +79,5 @@ fs.watch(WATCH_DIR, { recursive: true }, (eventType, filename) => {
     onChange(fullPath, eventType);
 });
 
-bundleAll();
+build();
 console.log(`Watching ${WATCH_DIR} ...`);

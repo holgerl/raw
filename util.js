@@ -14,22 +14,22 @@ function repeatFlipped(f, t) {
     return flipV ? 1 - v : v;
 }
 
-export function triangleWave(t) {
+function triangleWave(t) {
     t = Math.abs(t/2);
     const n = t % 1.0;
     return n < 0.5 ? n * 2 : (1 - n) * 2;
 }
 
-export function sineWave(t) {
+function sineWave(t) {
     const n = t*Math.PI - Math.PI/2;
     return 0.5 + Math.sin(n) * 0.5;
 }
 
-export function cosineWave(t) {
+function cosineWave(t) {
     return sineWave(t - Math.PI/2);
 }
 
-export function easeInWave(t) {
+function easeInWave(t) {
     const f = (t) => {
         const n = t == 1.0 ? 1.0 : (t % 1.0);
         return n * n;
@@ -37,7 +37,7 @@ export function easeInWave(t) {
     return repeatFlipped(f, t);
 }
 
-export function easeOutWave(t) {
+function easeOutWave(t) {
     const f = (t) => {
         const n = t == 1.0 ? 1.0 : (t % 1.0);
         return 1 - (1 - n) * (1 - n);
@@ -45,7 +45,7 @@ export function easeOutWave(t) {
     return repeatFlipped(f, t);
 }
 
-export function easeOutCubicWave(t) {
+function easeOutCubicWave(t) {
     const f = (t) => {
         const u = 1 - t;
         return 1 - u * u * u;
@@ -54,12 +54,12 @@ export function easeOutCubicWave(t) {
 }
 
 // Denne er suuuupernærme sineWave. Men den er vel mye raskere enn Math.sin?
-export function easeInOutWave(t) {
+function easeInOutWave(t) {
     const f = (t) => t * t * (3 - 2 * t);
     return repeatFlipped(f, t);
 }
 
-export function lerp(a, b, t) {
+function lerp(a, b, t) {
     return a + (b - a) * t;
 }
 
@@ -75,44 +75,44 @@ function clamp(value, from, to) {
     return value < min ? min : value > max ? max : value;
 }
 
-export function map(value, inMin, inMax, outMin, outMax, clampValue = false) {
+function map(value, inMin, inMax, outMin, outMax, clampValue = false) {
     const t = (value - inMin) / (inMax - inMin);
     const mapped = outMin + (outMax - outMin) * t;
     return clampValue ? clamp(mapped, outMin, outMax) : mapped;
 }
 
-export function length(vector) {
+function length(vector) {
     return Math.sqrt(vector.x * vector.x + vector.y * vector.y);
 }
 
-export function distance(vectorA, vectorB) {
+function distance(vectorA, vectorB) {
     const diff = {x: vectorB.x - vectorA.x, y: vectorB.y - vectorA.y};
     return length(diff);
 }
 
-export function normalize(vector) {
+function normalize(vector) {
     const len = length(vector);
     return len === 0 ? {x: 0, y: 0} : {x: vector.x / len, y: vector.y / len};
 }
 
-export function copy(vec) {
+function copy(vec) {
     return {x: vec.x, y: vec.y};
 }
 
-export function scale(vector, scalar) {
+function scale(vector, scalar) {
     return {x: vector.x * scalar, y: vector.y * scalar};
 }
 
-export function add(vectorA, vectorB) {
+function add(vectorA, vectorB) {
     return {x: vectorA.x + vectorB.x, y: vectorA.y + vectorB.y, z: vectorA.z + vectorB.z};
 }
 
 // TODO: Gjør slik at alle vektorfunksjoner støtter 3D
-export function subtract(vectorA, vectorB) {
+function subtract(vectorA, vectorB) {
     return {x: vectorA.x - vectorB.x, y: vectorA.y - vectorB.y, z: vectorA.z - vectorB.z};
 }
 
-export function cross(vectorA, vectorB) {
+function cross(vectorA, vectorB) {
   const normalX = vectorA.y * vectorB.z - vectorA.z * vectorB.y;
   const normalY = vectorA.z * vectorB.x - vectorA.x * vectorB.z;
   const normalZ = vectorA.x * vectorB.y - vectorA.y * vectorB.x;
@@ -120,26 +120,26 @@ export function cross(vectorA, vectorB) {
   return { x: normalX, y: normalY, z: normalZ };
 }
 
-export function fromTo(from, to) {
+function fromTo(from, to) {
     return subtract(to, from);
 }
 
-export function random(from, to) {
+function random(from, to) {
     return from + Math.random() * (to - from);
 }
 
-export function randomInt(from, to) {
+function randomInt(from, to) {
     return Math.floor(random(from, to + 1));
 }
 
-export function lerpVectors(vectorA, vectorB, t) {
+function lerpVectors(vectorA, vectorB, t) {
     return {
         x: lerp(vectorA.x, vectorB.x, t),
         y: lerp(vectorA.y, vectorB.y, t)
     };
 }
 
-export function projectPointOntoLine(point, lineA, lineB) {
+function projectPointOntoLine(point, lineA, lineB) {
     const A = point.x - lineA.x;
     const B = point.y - lineA.y;
     const C = lineB.x - lineA.x;
@@ -160,7 +160,7 @@ export function projectPointOntoLine(point, lineA, lineB) {
 }
 
 // TODO: Vurder å kalle denne centroid:
-export function bodyCenter(points) {
+function bodyCenter(points) {
     let sumX = 0;
     let sumY = 0;
     points.forEach(point => {
@@ -174,7 +174,7 @@ export function bodyCenter(points) {
 }
 
 // TODO: Vurder å standardisere på at funksjoner som tar inn w og h tar inn vektor i stedet
-export function gridDistribution(w, h = null) {
+function gridDistribution(w, h = null) {
     if (h == null) { // Put w elements in a square
         w = Math.ceil(Math.sqrt(w));
         h = w;
