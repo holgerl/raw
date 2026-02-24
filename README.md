@@ -4,11 +4,14 @@ Raw Canvas is an imperative framework for graphics and animations in HTML Canvas
 
 ## Usage
 
-```
-Raw.init(document.getElementById('myCanvas'));
+```javascript
+<script src="./raw.build.js"></script>
+<script>
+    Raw.init(document.getElementById('myCanvas'));
 
-(function onFrame() {
-    requestAnimationFrame(onFrame);
-    Raw.onFrame();
-})();
+    (function onFrame() {
+        requestAnimationFrame(onFrame);
+        Raw.onFrame();
+    })();
+</script>
 ```
