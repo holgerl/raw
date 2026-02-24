@@ -128,7 +128,7 @@ const Collision = {};
         return ddx * ddx + ddy * ddy;
     }
 
-    function bbox(poly) {
+    function bboxBody(poly) {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         for (const p of poly) {
             minX = Math.min(minX, p.x);
@@ -137,6 +137,20 @@ const Collision = {};
             maxY = Math.max(maxY, p.y);
         }
         return { minX, minY, maxX, maxY };
+    }
+
+    function bboxCircle(circle) {
+        const { position: { x: cx, y: cy }, radius: r } = circle;
+        return {
+            minX: cx - r,
+            minY: cy - r,
+            maxX: cx + r,
+            maxY: cy + r
+        };
+    }
+
+    function makebbox(node) {
+        return node.type === "point" ? bboxCircle(node) : bboxBody(node.points.map(p => p.transformed));
     }
 
     function bboxOverlap(a, b) {
@@ -149,10 +163,6 @@ const Collision = {};
     }
 
     function polygonsOverlap(polyA, polyB) {
-        // TODO: Gjør BB-test i Collision.update, og lag BB for point med radius også der
-        // 0. Bound box test
-        if (!bboxOverlap(bbox(polyA), bbox(polyB))) return false;
-
         // 1. Edge intersection test
         for (let i = 0; i < polyA.length; i++) {
             const a1 = polyA[i];
@@ -225,6 +235,8 @@ const Collision = {};
                     point.transformed = add(add(rotated, center), node.position);
                 });
             }
+
+            node.bbox = makebbox(node);
         });
 
         nodes.forEach(node => {
@@ -235,7 +247,7 @@ const Collision = {};
                 affectedByNodes.forEach(affectedByNode => {
                     if (affectedByNode === node) return; // Don't check collision with self
 
-                    // TODO: Bounding box test er kanskje best å gjøre her generelt for alle typer
+                    if (!bboxOverlap(node.bbox, affectedByNode.bbox)) return false;
 
                     // TODO: Hvis en node er axis aligned box bør beregningene forenkles veldig
 
