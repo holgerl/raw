@@ -268,7 +268,7 @@ const Raw = (function () {
         };
     }
 
-    Raw.frameLoop = function() {
+    Raw.onFrame = function() {
         const nowMillis = performance.now();
         Raw.deltaSeconds = (nowMillis - lastTimeMillis) / 1000;
         if (Raw.deltaSeconds > 0.1) Raw.deltaSeconds = 1/60; // Unngår altfor store hopp når andre faner vises
