@@ -176,7 +176,7 @@ const Collision = {};
     }
 
     function circlePolygonOverlap(circle, polygon) {
-        const { x: cx, y: cy, r } = circle;
+        const { position: { x: cx, y: cy }, radius: r } = circle;
         const r2 = r * r;
 
         // 1. Center inside polygon → overlap
@@ -195,6 +195,12 @@ const Collision = {};
         }
 
         return false;
+    }
+
+    function circlesOverlap(circleA, circleB) {
+        const distance = Raw.distance(circleA.position, circleB.position);
+        const totalRadius = circleA.radius + circleB.radius;
+        return distance <= totalRadius;
     }
 
     Collision.update = function() {
@@ -233,33 +239,27 @@ const Collision = {};
 
                     // TODO: Hvis en node er axis aligned box bør beregningene forenkles veldig
 
+                    let overlap = false;
+
                     if (node.type === "point" && affectedByNode.type === "point") {
-                        const distance = Raw.distance(node.position, affectedByNode.position);
-                        const totalRadius = node.radius + affectedByNode.radius;
-                        if (distance <= totalRadius) {
-                            collisions[node.id] = affectedByNode.id;
-                        }
+                        overlap = circlesOverlap(node, affectedByNode);
                     } else if (node.type === "body" && affectedByNode.type === "body") {
-                        const overlap = polygonsOverlap(
+                        overlap = polygonsOverlap(
                             node.points.map(p => p.transformed), 
                             affectedByNode.points.map(p => p.transformed), 
                         );
-
-                        if (overlap) {
-                            collisions[node.id] = affectedByNode.id;
-                        }
                     } else if (node.type === "point" && affectedByNode.type === "body" || node.type === "body" && affectedByNode.type === "point") {
                         const pointNode = node.type === "point" ? node : affectedByNode;
                         const otherBody = node.type === "body" ? node : affectedByNode;
                         
-                        const overlap = circlePolygonOverlap(
-                            {x: pointNode.position.x, y: pointNode.position.y, r: pointNode.radius}, 
+                        overlap = circlePolygonOverlap(
+                            pointNode, 
                             otherBody.points.map(p => p.transformed), 
                         );
+                    }
 
-                        if (overlap) {
-                            collisions[node.id] = affectedByNode.id;
-                        }
+                    if (overlap) {
+                        collisions[node.id] = affectedByNode.id;
                     }
                 });
             });
