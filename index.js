@@ -268,7 +268,7 @@ const Raw = (function () {
         };
     }
 
-    function frameLoop() {
+    Raw.frameLoop = function() {
         const nowMillis = performance.now();
         Raw.deltaSeconds = (nowMillis - lastTimeMillis) / 1000;
         if (Raw.deltaSeconds > 0.1) Raw.deltaSeconds = 1/60; // Unngår altfor store hopp når andre faner vises
@@ -383,7 +383,6 @@ const Raw = (function () {
         Raw.collision.update(Raw.deltaSeconds);
 
         frameCount++;
-        requestAnimationFrame(frameLoop);
     };
 
     // TODO: Skal sånne ting være en funksjon på noden heller? Gjelder flere ting som f.eks. Raw.startDrag
@@ -553,8 +552,8 @@ const Raw = (function () {
         drag.target = null;
     }
 
-    Raw.init = function(containerElement) {
-        canvas = document.createElement("canvas");
+    Raw.init = function(canvasElement) {
+        canvas = canvasElement;
 
         // TODO: Rename alle disse til pointerXX
         canvas.addEventListener("pointerdown", onMouseDown);
@@ -562,7 +561,6 @@ const Raw = (function () {
         canvas.addEventListener("pointermove", onMouseMove);
         canvas.addEventListener('pointercancel', dragUp);
         canvas.addEventListener('lostpointercapture', dragUp);
-
 
         canvas.style.width = "inherit"; // To fill parent
         canvas.style.height = "inherit";
@@ -573,19 +571,10 @@ const Raw = (function () {
         canvas.style.userSelect = "none";
         canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
-        containerElement.appendChild(canvas);
-
         ctx = canvas.getContext("2d");
-
-        // TODO: Noen ganger må klienten ha tilgang til ctx utenom draw og transform, 
-        // f.eks. for å lage en imageData med ctx.createImageData()
-        // eller tegne pixelart med ctx.imageSmoothingEnabled = false
-        //Raw.sketchyAccessToCtx = ctx;
 
         Raw.resize();
         window.addEventListener("resize", (event) => Raw.resize());
-        
-        requestAnimationFrame(frameLoop); // TODO: Dette bør kanskje brukeren av Raw gjøre selv, og så er hele frameLoop() heller tilgjengelig for brukeren å kalle selv i sin animationFrame
     }
 
     return Raw;
