@@ -4,7 +4,7 @@ const Raw = (function () {
     const Raw = {};
 
     // #include "./util.js"
-    // #include "./collision.js"
+    // #include "./collision2.js"
 
     Object.assign(Raw, {
         lerp, clamp, fromTo, map, distance, copy, add, subtract, scale, cross, normalize, random, randomInt, bodyCenter, 
@@ -19,6 +19,8 @@ const Raw = (function () {
     let fpsLastTimeMillis = performance.now();
     Raw.fps = 0;
     let fpsCounter = 0;
+
+    let mouseTargetNode = null;
 
     function traverse(node, callbackBefore, callbackAfter = () => {}) {
         callbackBefore(node);
@@ -56,16 +58,6 @@ const Raw = (function () {
         ctx.moveTo(-size/2, 0);
         ctx.lineTo(size/2, 0);
         ctx.stroke();
-
-        // TODO: Støtte polygon hitbox også, ikke bare lengde 2 (AABB)
-        if (node.object.hitbox && node.object.hitbox.length === 2) {
-            const hitbox = node.object.hitbox.map(corner => 
-                node.object.origin ? subtract(corner, node.object.origin) : corner
-            );
-
-            ctx.strokeStyle = "#ddd";
-            ctx.strokeRect(hitbox[0].x, hitbox[0].y, hitbox[1].x - hitbox[0].x, hitbox[1].y - hitbox[0].y);
-        }
         
         if (node.object.pivot) {
             const pivot = node.object.pivot;
@@ -173,24 +165,19 @@ const Raw = (function () {
                 }
             };
 
-            // TODO: Hitbox bør kunne være enten
-            // point med radius, AABB eller polygon
             if (object.hitbox) {
                 const oncollision = object.oncollision ? object.oncollision.bind(node) : null;
-                
-                if (object.hitbox.length == 2) {
-                    // Antar boundingbox med topleft of bottomright
-                    // TODO: Dette gjør jo at man aldri kan ha en body med bare to punkter, som kan være nyttig for å lage en linje-grense
-                    const hitboxWidth = (object.hitbox[1].x - object.hitbox[0].x);
-                    object.collisionNode = Raw.collision.addPoint(
-                        {id: node.id, position: {x:0, y:0}, radius: hitboxWidth/2, oncollision, group: object.collisionGroup, affectedByGroups: object.collisionAffectedByGroups}
+
+                if (Array.isArray(object.hitbox)) {
+                    object.collisionNode = Raw.collision.addBody(
+                        {id: node.id, position: object.position, points: object.hitbox, oncollision, group: object.collisionGroup, affectedByGroups: object.collisionAffectedByGroups}
                     );
                 } else {
-                    // Antar liste med punkter for et polygon
-                    object.collisionNode = Raw.collision.addBody(
-                        {id: node.id, position: {x:0, y:0}, points: object.hitbox, oncollision}
+                    object.collisionNode = Raw.collision.addPoint(
+                        {id: node.id, position: object.hitbox.position, radius: object.hitbox.radius, oncollision, group: object.collisionGroup, affectedByGroups: object.collisionAffectedByGroups}
                     );
                 }
+                
             }
 
             parent.children.push(node);
@@ -344,19 +331,6 @@ const Raw = (function () {
                         obj.collisionNode.position = copy(globalPosition)
                         obj.collisionNode.rotation = node.rotation;
                     }
-
-                    // TODO: hitbox for museklikke antar jo AABB. men for collision.js antar den en liste av punkter. Bør være likt. Kanskje museklikk bare bruker collision.js også
-                    if (obj.hitbox) {
-                        const hitbox = node.object.hitbox.map(corner => 
-                            obj.origin ? subtract(corner, obj.origin) : corner
-                        );
-                        const topleft = matrix.transformPoint(hitbox[0]);
-                        const bottomright = matrix.transformPoint(hitbox[1]);
-                        node.globalHitbox = [
-                            {x: topleft.x/window.devicePixelRatio, y: topleft.y/window.devicePixelRatio}, 
-                            {x: bottomright.x/window.devicePixelRatio, y: bottomright.y/window.devicePixelRatio}
-                        ];
-                    }
                 }
             },
             (node) => {
@@ -376,11 +350,12 @@ const Raw = (function () {
             }
         );
 
+
+        Raw.collision.update(Raw.deltaSeconds);
+
         if (Raw.settings.debug) {
             Raw.collision.draw(ctx, canvas);
         }
-
-        Raw.collision.update(Raw.deltaSeconds);
 
         frameCount++;
     };
@@ -435,25 +410,7 @@ const Raw = (function () {
         Raw.mouse.x = offsetX - canvas.width / window.devicePixelRatio / 2;
         Raw.mouse.y = offsetY - canvas.height / window.devicePixelRatio / 2;
     }
-
-    function findNodeAtMouse(event) {
-        let targetNode = null;
-        traverse(Raw.scenegraph, (node) => {
-            if (node.globalHitbox && node.visible) {
-                const globalHitbox = node.globalHitbox;
-                const globalMouse = {
-                    x: event.offsetX || event.touches[0].clientX,
-                    y: event.offsetY || event.touches[0].clientY,
-                };
-                if (globalMouse.x >= globalHitbox[0].x && globalMouse.x <= globalHitbox[1].x &&
-                    globalMouse.y >= globalHitbox[0].y && globalMouse.y <= globalHitbox[1].y) {
-                    targetNode = node;
-                }
-            }
-        });
-        return targetNode;
-    }
-
+    
     function onMouseDown(event) {
         const isPrimaryClick =
             event.button === 0 &&
@@ -466,14 +423,12 @@ const Raw = (function () {
 
         setMouseFromEvent(event);
         Raw.mouse.down = true;
-        
-        const targetNode = findNodeAtMouse(event);
 
-        if (Raw.settings.debug) console.log("Mouse down:", Raw.mouse.x, Raw.mouse.y, targetNode && targetNode.id);
+        if (Raw.settings.debug) console.log("Mouse down:", Raw.mouse.x, Raw.mouse.y, mouseTargetNode && mouseTargetNode.id);
 
         // TODO: Rename onmousedown på noden til onpointerdown osv for alle eventer
-        if (targetNode && targetNode.object.onmousedown) {
-            targetNode.object.onmousedown.call(targetNode, event);
+        if (mouseTargetNode && mouseTargetNode.object.onmousedown) {
+            mouseTargetNode.object.onmousedown.call(mouseTargetNode, event);
         }
     }
 
@@ -481,10 +436,8 @@ const Raw = (function () {
         setMouseFromEvent(event);
         Raw.mouse.down = false;
 
-        const targetNode = findNodeAtMouse(event);
-
-        if (targetNode && targetNode.object.onmouseup) {
-            targetNode.object.onmouseup.call(targetNode, event);
+        if (mouseTargetNode && mouseTargetNode.object.onmouseup) {
+            mouseTargetNode.object.onmouseup.call(mouseTargetNode, event);
         }        
 
         dragUp(event);
@@ -493,12 +446,9 @@ const Raw = (function () {
     function onMouseMove(event) {
         setMouseFromEvent(event);
 
-        traverse(Raw.scenegraph, (node) => {
-            const obj = node.object;
-            if (obj && obj.onmousemove) {
-                obj.onmousemove.call(node, Raw.mouse.x, Raw.mouse.y, event);
-            }
-        });
+        if (mouseTargetNode && mouseTargetNode.object.onmousemove) {
+            mouseTargetNode.object.onmousemove.call(mouseTargetNode, Raw.mouse.x, Raw.mouse.y, event);
+        }        
 
         dragMove(event);
     }
@@ -575,6 +525,31 @@ const Raw = (function () {
 
         Raw.resize();
         window.addEventListener("resize", (event) => Raw.resize());
+
+        const mouse = Raw.scenegraph.add({
+            id: "Raw.mouse",
+            hitbox: { position: {x: 0, y: 0}, radius: 0 },
+            //hitbox: [ { x: -15, y: -15 }, { x: 15, y: -15 }, { x: 15, y: 15 }, { x: -15, y: 15 } ],
+            collisionGroup: "none",
+            collisionAffectedByGroups: ["all"],
+            update: function() {
+                this.position.x = Raw.mouse.x;
+                this.position.y = Raw.mouse.y;
+            },
+            oncollision: function(other, direction) {
+                if (direction === "in") {
+                    traverse(Raw.scenegraph, (node) => {
+                        if (node.id === other.id) {
+                            mouseTargetNode = node;
+                        }
+                    });
+                } else {
+                    mouseTargetNode = null;
+                }
+                
+                console.log("Mouse collision:", direction, other.id);
+            },
+        });
     }
 
     return Raw;
