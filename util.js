@@ -159,20 +159,6 @@ function projectPointOntoLine(point, lineA, lineB) {
     return {x: xx, y: yy, param, side};
 }
 
-// TODO: Vurder å kalle denne centroid:
-function bodyCenter(points) {
-    let sumX = 0;
-    let sumY = 0;
-    points.forEach(point => {
-        sumX += point.x;
-        sumY += point.y;
-    });
-    return {
-        x: sumX / points.length,
-        y: sumY / points.length
-    };
-}
-
 // TODO: Vurder å standardisere på at funksjoner som tar inn w og h tar inn vektor i stedet
 function gridDistribution(w, h = null) {
     if (h == null) { // Put w elements in a square
