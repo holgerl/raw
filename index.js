@@ -18,8 +18,8 @@ const Raw = (function () {
     let lastTimeMillis = performance.now();
     let frameCount = 0;
     
-    let fpsLastTimeMillis = performance.now();
     Raw.fps = 0;
+    let fpsMillis = performance.now();
     let fpsCounter = 0;
 
     let mouseTargetNode = null;
@@ -32,40 +32,21 @@ const Raw = (function () {
         callbackAfter(node);
     }
 
-    function measureFps(timeMillis) {
-        const fpsDeltaMillis = timeMillis - fpsLastTimeMillis;
+    function measureFps(nowMillis) {
+        const fpsDeltaMillis = nowMillis - fpsMillis;
         fpsCounter++;
         if (fpsDeltaMillis >= 100) { // update every x milliseconds
-            fps = (fpsCounter / fpsDeltaMillis) * 1000;
-            Raw.fps = Math.round(fps);
+            Raw.fps = Math.round((fpsCounter / fpsDeltaMillis) * 1000);
             fpsCounter = 0;
-            fpsLastTimeMillis = timeMillis;
+            fpsMillis = nowMillis;
         }
     }
 
     function drawDebug(node) {
         const origin = node.object.origin || {x: 0, y: 0};
 
-        ctx.save();
-
-        ctx.globalCompositeOperation = "source-over";
-        ctx.lineWidth = 1;
-
-        ctx.strokeStyle = "#ddd";
-        const size = 20;
-        ctx.translate(origin.x, origin.y);
-        ctx.beginPath();
-        ctx.moveTo(0, -size/2);
-        ctx.lineTo(0, size/2);
-        ctx.moveTo(-size/2, 0);
-        ctx.lineTo(size/2, 0);
-        ctx.stroke();
-        
-        if (node.object.pivot) {
-            const pivot = node.object.pivot;
-
-            ctx.strokeStyle = "#f88";
-            ctx.translate(pivot.x, pivot.y);
+        function cross(size, color) {
+            ctx.strokeStyle = color;
             ctx.beginPath();
             ctx.moveTo(0, -size/2);
             ctx.lineTo(0, size/2);
@@ -74,17 +55,29 @@ const Raw = (function () {
             ctx.stroke();
         }
 
+        ctx.save();
+
+        ctx.lineWidth = 1;
+        ctx.translate(origin.x, origin.y);
+        cross(20, "#ddd");
+
+        const pivot = node.object.pivot;
+        
+        if (pivot) {
+            ctx.translate(pivot.x, pivot.y);
+            cross(20, "#f88");
+        }
+
         if (node.id && node !== Raw.scenegraph) {
-            ctx.globalCompositeOperation = "source-over";
             ctx.font = "10px monospace";
             ctx.textBaseline = "top";
             ctx.textAlign = "left";
             ctx.strokeStyle = 'black';
             ctx.lineWidth = 2;
-            const padding = 4;
-            ctx.strokeText(node.id, padding, padding);
+            ctx.translate(4, 4); // Padding
+            ctx.strokeText(node.id, 0, 0);
             ctx.fillStyle = 'white';
-            ctx.fillText(node.id, padding, padding);
+            ctx.fillText(node.id, 0, 0);
         }
 
         ctx.restore();
@@ -102,28 +95,28 @@ const Raw = (function () {
     };
 
     function updateCamera() {
-        Raw.camera.zoom = Math.min(Raw.camera.zoom, 0.99999);
-        Raw.camera.scale = 1/(1 - Raw.camera.zoom);
+        const c = Raw.camera;
+        c.zoom = Math.min(c.zoom, 0.99999);
+        c.scale = 1/(1 - c.zoom);
 
-        Raw.topLeft = Raw.scale({x: -Raw.width/2, y: -Raw.height/2}, 1/Raw.camera.scale);
-        Raw.bottomRight = Raw.scale({x: Raw.width/2, y: Raw.height/2}, 1/Raw.camera.scale);
+        Raw.topLeft = scale({x: -Raw.width/2, y: -Raw.height/2}, 1/c.scale);
+        Raw.bottomRight = scale({x: Raw.width/2, y: Raw.height/2}, 1/c.scale);
     }
+    
+    const c = Raw.camera;
 
     Raw.scenegraph = {
         id: 'root',
         object: { // TODO: Rename til data, og bruk den kun for data, ikke funksjoner som transform
             update: function() {
-                // TODO: Dette er av flere eksempler hvor en lokal variabel i stedet for Raw.camera sparer mye plass i minifisert kode. 
-                if (Raw.camera.target.zoom !== undefined) {
-                    Raw.camera.zoom = Raw.lerp(Raw.camera.zoom, Raw.camera.target.zoom, Raw.camera.target.speed);
+                if (c.target.zoom !== undefined) {
+                    c.zoom = lerp(c.zoom, c.target.zoom, c.target.speed);
                 }
-                if (Raw.camera.target.rotation !== undefined) {
-                    Raw.camera.rotation = Raw.lerp(Raw.camera.rotation, Raw.camera.target.rotation, Raw.camera.target.speed);
+                if (c.target.rotation !== undefined) {
+                    c.rotation = lerp(c.rotation, c.target.rotation, c.target.speed);
                 }
-                if (Raw.camera.target.position !== undefined) {
-                    // TODO: Bruk en vector-lerp her, og alle andre steder som ligner
-                    Raw.camera.position.x = Raw.lerp(Raw.camera.position.x, Raw.camera.target.position.x, Raw.camera.target.speed);
-                    Raw.camera.position.y = Raw.lerp(Raw.camera.position.y, Raw.camera.target.position.y, Raw.camera.target.speed);
+                if (c.target.position !== undefined) {
+                    c.position = lerpVectors(c.position, c.target.position, c.target.speed);
                 }
             },    
             transform: function(ctx, canvas) {
@@ -131,14 +124,14 @@ const Raw = (function () {
                     x: Raw.width/2,
                     y: Raw.height/2,
                 }
-                const translate = subtract(center, Raw.camera.position);
+                const translate = subtract(center, c.position);
 
                 updateCamera();
 
                 // TODO: Dette blir ikke riktig når scale og translate gjøres sammen. Må nok bruke pivot riktig slik som i scenegraph ellers
                 ctx.translate(translate.x, translate.y);
-                ctx.rotate(Raw.camera.rotation);
-                ctx.scale(Raw.camera.scale, Raw.camera.scale);
+                ctx.rotate(c.rotation);
+                ctx.scale(c.scale, c.scale);
             },
         },
         // TODO: Origin burde jo også ligge her. Og det er jo dumt at så mange interne verdier ligger på object.
@@ -171,7 +164,7 @@ const Raw = (function () {
                 const oncollision = object.oncollision ? object.oncollision.bind(node) : null;
 
                 if (Array.isArray(object.hitbox)) {
-                    object.collisionNode = Raw.collision.addBody(
+                    object.collisionNode = Raw.collision.addBody(                                    // TODO: Finn noen kortere navn på fisse feltene:
                         {id: node.id, position: object.position, points: object.hitbox, oncollision, group: object.collisionGroup, affectedByGroups: object.collisionAffectedByGroups}
                     );
                 } else {
@@ -203,10 +196,6 @@ const Raw = (function () {
         
         measureFps(nowMillis);
 
-        if (typeof Physics !== 'undefined') Physics.update(Raw.deltaSeconds);
-        if (typeof Physics2 !== 'undefined') Physics2.update(Raw.deltaSeconds);
-        if (typeof Fluid !== 'undefined') Fluid.update(Raw.deltaSeconds);
-
         if (Raw.settings.clearOnFrame) {
             if (Raw.settings.clearColor === null) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -228,15 +217,13 @@ const Raw = (function () {
                     if (obj.update) obj.update.call(node);
 
                     if (node.target.position) {
-                        node.position.x = Raw.lerp(node.position.x, node.target.position.x, node.target.speed);
-                        node.position.y = Raw.lerp(node.position.y, node.target.position.y, node.target.speed);
+                        node.position = lerpVectors(node.position, node.target.position, node.target.speed);
                     }
                     if (node.target.rotation !== undefined) {
-                        node.rotation = Raw.lerp(node.rotation, node.target.rotation, node.target.speed);
+                        node.rotation = lerp(node.rotation, node.target.rotation, node.target.speed);
                     }
                     if (node.target.scale !== undefined) {
-                        node.scale.x = Raw.lerp(node.scale.x, node.target.scale.x, node.target.speed);
-                        node.scale.y = Raw.lerp(node.scale.y, node.target.scale.y, node.target.speed);
+                        node.scale = lerpVectors(node.scale, node.target.scale, node.target.speed);
                     }
 
                     ctx.save();
@@ -290,7 +277,7 @@ const Raw = (function () {
         );
 
 
-        Raw.collision.update(Raw.deltaSeconds);
+        Raw.collision.update();
 
         if (Raw.settings.debug) {
             Raw.collision.draw(ctx, canvas);
@@ -299,25 +286,25 @@ const Raw = (function () {
         frameCount++;
     };
 
+    function remove(array, element) {
+        const index = array.indexOf(element);
+        if (index >= 0) {
+            return array.splice(index, 1);
+        }
+    }
+
     // TODO: Skal sånne ting være en funksjon på noden heller? Gjelder flere ting som f.eks. Raw.startDrag
-    Raw.bringToFront = function(node) {
-        const siblings = node.parent.children;
-        const index = siblings.indexOf(node);
-        if (index >= 0) {
-            siblings.splice(index, 1);
-            siblings.push(node);
-        }
+    Raw.bringToFront = (node) => {
+        remove(node.parent.children, node);
+        node.parent.children.push(node);
     };
 
-    Raw.bringToBack = function(node) {
-        const siblings = node.parent.children;
-        const index = siblings.indexOf(node);
-        if (index >= 0) {
-            siblings.splice(index, 1);
-            siblings.unshift(node);
-        }
+    Raw.bringToBack = (node) => {
+        remove(node.parent.children, node);
+        node.parent.children.unshift(node);
     };
 
+    // TODO: Bruk lambda i disse tilfellene for å spare 6 bokstaver
     Raw.resize = function(width = canvas.parentElement.clientWidth, height = canvas.parentElement.clientHeight) {
         const ratio = window.devicePixelRatio || 1;
 
@@ -430,6 +417,7 @@ const Raw = (function () {
         
         drag.pointerId = e.pointerId;
         
+        // TODO: Bruk vektorer her
         drag.offsetX = pos.x - drag.target.x;
         drag.offsetY = pos.y - drag.target.y;
     }
