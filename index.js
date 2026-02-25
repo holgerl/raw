@@ -348,6 +348,19 @@ const Raw = (function () {
         // TODO: Rename til Raw.pointer
         Raw.mouse.x = offsetX - canvas.width / window.devicePixelRatio / 2;
         Raw.mouse.y = offsetY - canvas.height / window.devicePixelRatio / 2;
+
+        const mouse = {type: "point", position: {x: offsetX, y: offsetY}, radius: 0};
+        mouse.bbox = Raw.makebbox(mouse);
+
+        mouseTargetNode = null;
+
+        Raw.traverse(Raw.scenegraph, node => {
+            if (node.object.collisionNode) {
+                node.bbox = Raw.makebbox(node.object.collisionNode);
+                const overlap = Collision.checkOverlap(mouse, node.object.collisionNode); 
+                if (overlap) mouseTargetNode = node;
+            }
+        });
     }
     
     function onMouseDown(event) {
@@ -464,31 +477,6 @@ const Raw = (function () {
 
         Raw.resize();
         window.addEventListener("resize", (event) => Raw.resize());
-
-        const mouse = Raw.scenegraph.add({
-            id: "Raw.mouse",
-            hitbox: { position: {x: 0, y: 0}, radius: 0 }, // TODO: Det er kanskje forvirrende at man kan sende inn position i tillegg til posisjonen noden allerede har. Dropp det og anta at alle er rundt origin
-            //hitbox: [ { x: -15, y: -15 }, { x: 15, y: -15 }, { x: 15, y: 15 }, { x: -15, y: 15 } ],
-            collisionGroup: "none",
-            collisionAffectedByGroups: ["all"],
-            update: function() {
-                this.position.x = Raw.mouse.x;
-                this.position.y = Raw.mouse.y;
-            },
-            oncollision: function(other, direction) {
-                if (direction === "in") {
-                    traverse(Raw.scenegraph, (node) => {
-                        if (node.id === other.id) {
-                            mouseTargetNode = node;
-                        }
-                    });
-                } else {
-                    mouseTargetNode = null;
-                }
-                
-                console.log("Mouse collision:", direction, other.id);
-            },
-        });
     }
 
     return Raw;

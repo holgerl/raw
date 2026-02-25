@@ -153,6 +153,8 @@ const Collision = {};
         return node.type === "point" ? bboxCircle(node) : bboxBody(node.points.map(p => p.transformed));
     }
 
+    Raw.makebbox = makebbox; // TODO: Putt bbox-greiene i util elns
+
     function bboxOverlap(a, b) {
         return !(
             a.maxX < b.minX ||
@@ -213,6 +215,29 @@ const Collision = {};
         return distance <= totalRadius;
     }
 
+    Collision.checkOverlap = function(nodeA, nodeB) {
+        if (!bboxOverlap(nodeA.bbox, nodeB.bbox)) return false;
+        
+        // TODO: Hvis en node er axis aligned box bør beregningene forenkles veldig
+
+        if (nodeA.type === "point" && nodeB.type === "point") {
+            return circlesOverlap(nodeA, nodeB);
+        } else if (nodeA.type === "body" && nodeB.type === "body") {
+            return polygonsOverlap(
+                nodeA.points.map(p => p.transformed), 
+                nodeB.points.map(p => p.transformed), 
+            );
+        } else if (nodeA.type === "point" && nodeB.type === "body" || nodeA.type === "body" && nodeB.type === "point") {
+            const pointNode = nodeA.type === "point" ? nodeA : nodeB;
+            const otherBody = nodeA.type === "body" ? nodeA : nodeB;
+            
+            return circlePolygonOverlap(
+                pointNode, 
+                otherBody.points.map(p => p.transformed), 
+            );
+        }
+    }
+
     Collision.update = function() {
         const collisions = {}; 
 
@@ -242,35 +267,12 @@ const Collision = {};
         nodes.forEach(node => {
             node.affectedByGroups.forEach(group => {
                 // TODO: Lag et hashmap for grupper
-                const affectedByNodes = group === "all" ? nodes : nodes.filter(n => n.group === group);
+                const affectedByNodes = nodes.filter(n => n.group === group);
 
                 affectedByNodes.forEach(affectedByNode => {
                     if (affectedByNode === node) return; // Don't check collision with self
-
-                    if (!bboxOverlap(node.bbox, affectedByNode.bbox)) return false;
-
-                    // TODO: Hvis en node er axis aligned box bør beregningene forenkles veldig
-
-                    let overlap = false;
-
-                    if (node.type === "point" && affectedByNode.type === "point") {
-                        overlap = circlesOverlap(node, affectedByNode);
-                    } else if (node.type === "body" && affectedByNode.type === "body") {
-                        overlap = polygonsOverlap(
-                            node.points.map(p => p.transformed), 
-                            affectedByNode.points.map(p => p.transformed), 
-                        );
-                    } else if (node.type === "point" && affectedByNode.type === "body" || node.type === "body" && affectedByNode.type === "point") {
-                        const pointNode = node.type === "point" ? node : affectedByNode;
-                        const otherBody = node.type === "body" ? node : affectedByNode;
-                        
-                        overlap = circlePolygonOverlap(
-                            pointNode, 
-                            otherBody.points.map(p => p.transformed), 
-                        );
-                    }
-
-                    if (overlap) {
+                    
+                    if (Collision.checkOverlap(node, affectedByNode)) {
                         collisions[node.id] = affectedByNode.id;
                     }
                 });
