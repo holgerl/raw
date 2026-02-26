@@ -397,14 +397,9 @@ const Raw = (function () {
     function dragMove(e) {
         if (!drag.active || e.pointerId !== drag.pointerId) return;
 
-        const pos = {
-            x: e.clientX,
-            y: e.clientY,
-        };
-
         // Disse må være in place, fordi target er ekstern verdi som kan være pekt til andre steder
-        drag.target.x = pos.x - drag.offset.x;
-        drag.target.y = pos.y - drag.offset.y;
+        drag.target.x = e.clientX - drag.offset.x;
+        drag.target.y = e.clientY - drag.offset.y;
     }
 
     function dragUp(e) {
@@ -425,6 +420,7 @@ const Raw = (function () {
         el("pointermove", onMouseMove);
         el('pointercancel', dragUp);
         el('lostpointercapture', dragUp);
+        el("resize", () => Raw.resize());
 
         const s = canvas.style;
         s.width = "inherit"; // To fill parent
@@ -439,7 +435,6 @@ const Raw = (function () {
         ctx = canvas.getContext("2d");
 
         Raw.resize();
-        window.addEventListener("resize", () => Raw.resize());
     }
 
     return Raw;
