@@ -22,7 +22,7 @@ const Raw = (function () {
     let fpsMillis = performance.now();
     let fpsCounter = 0;
 
-    let mouseTargetNode = null;
+    let hoverNode = null;
 
     function traverse(node, callbackBefore, callbackAfter = () => {}) {
         callbackBefore(node);
@@ -317,11 +317,6 @@ const Raw = (function () {
         // TODO: Dette burde være en vector med navn dimensions eller size, slik at man kan bruke vektor-matte:
         Raw.width = width;
         Raw.height = height;
-        
-        Raw.scenegraph.object.hitbox = [
-            {x: -Raw.width / 2, y: -Raw.height / 2},
-            {x: Raw.width / 2, y: Raw.height / 2},
-        ];
 
         ctx.reset();
         ctx.scale(ratio, ratio);
@@ -342,13 +337,13 @@ const Raw = (function () {
         const mouse = {type: "point", position, radius: 0};
         mouse.bbox = Raw.makebbox(mouse);
 
-        mouseTargetNode = null;
+        hoverNode = null;
 
         Raw.traverse(Raw.scenegraph, node => {
             if (node.object.collisionNode) {
                 node.bbox = Raw.makebbox(node.object.collisionNode);
                 if (Collision.checkOverlap(mouse, node.object.collisionNode)) {
-                    mouseTargetNode = node;
+                    hoverNode = node;
                 }
             }
         });
@@ -367,11 +362,11 @@ const Raw = (function () {
         setMouseFromEvent(e);
         Raw.mouse.down = true;
 
-        if (Raw.settings.debug) console.log("Mouse down:", Raw.mouse.x, Raw.mouse.y, mouseTargetNode && mouseTargetNode.id);
+        if (Raw.settings.debug) console.log("Mouse down:", Raw.mouse.x, Raw.mouse.y, hoverNode && hoverNode.id);
 
         // TODO: Rename onmousedown på noden til onpointerdown osv for alle eventer
-        if (mouseTargetNode && mouseTargetNode.object.onmousedown) {
-            mouseTargetNode.object.onmousedown.call(mouseTargetNode, e);
+        if (hoverNode && hoverNode.object.onmousedown) {
+            hoverNode.object.onmousedown.call(hoverNode, e);
         }
     }
 
@@ -379,8 +374,8 @@ const Raw = (function () {
         setMouseFromEvent(e);
         Raw.mouse.down = false;
 
-        if (mouseTargetNode && mouseTargetNode.object.onmouseup) {
-            mouseTargetNode.object.onmouseup.call(mouseTargetNode, e);
+        if (hoverNode && hoverNode.object.onmouseup) {
+            hoverNode.object.onmouseup.call(hoverNode, e);
         }        
 
         dragUp(e);
@@ -389,8 +384,8 @@ const Raw = (function () {
     function onMouseMove(e) {
         setMouseFromEvent(e);
 
-        if (mouseTargetNode && mouseTargetNode.object.onmousemove) {
-            mouseTargetNode.object.onmousemove.call(mouseTargetNode, Raw.mouse.x, Raw.mouse.y, e);
+        if (hoverNode && hoverNode.object.onmousemove) {
+            hoverNode.object.onmousemove.call(hoverNode, Raw.mouse.x, Raw.mouse.y, e);
         }        
 
         dragMove(e);
@@ -462,7 +457,7 @@ const Raw = (function () {
         // For dragging:
         s.touchAction = "none";
         s.userSelect = "none";
-        
+
         el('touchmove', e => e.preventDefault(), { passive: false });
 
         ctx = canvas.getContext("2d");
