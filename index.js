@@ -39,6 +39,7 @@ const Raw = (function () {
             Raw.fps = Math.round((fpsCounter / fpsDeltaMillis) * 1000);
             fpsCounter = 0;
             fpsMillis = nowMillis;
+            if (Raw.fps < 20) console.warn("Low FPS:", Raw.fps);
         }
     }
 
@@ -308,35 +309,37 @@ const Raw = (function () {
     Raw.resize = function(width = canvas.parentElement.clientWidth, height = canvas.parentElement.clientHeight) {
         const ratio = window.devicePixelRatio || 1;
 
-        console.log("Resizing canvas:", width, height, ratio);
+        console.log("Resizing:", width, height, ratio);
 
         canvas.height = height * ratio;
         canvas.width = width * ratio;
+
+        // TODO: Dette burde være en vector med navn dimensions eller size, slik at man kan bruke vektor-matte:
+        Raw.width = width;
+        Raw.height = height;
         
         Raw.scenegraph.object.hitbox = [
-            {x: -canvas.width / ratio / 2, y: -canvas.height / ratio / 2},
-            {x: canvas.width / ratio / 2, y: canvas.height / ratio / 2},
+            {x: -Raw.width / 2, y: -Raw.height / 2},
+            {x: Raw.width / 2, y: Raw.height / 2},
         ];
 
         ctx.reset();
         ctx.scale(ratio, ratio);
 
-        // TODO: Dette burde være en vector med navn dimensions eller size:
-        Raw.width = canvas.width / ratio;
-        Raw.height = canvas.height / ratio;
-
         updateCamera();
     };
 
     function setMouseFromEvent(event) {
-        const offsetX = event.offsetX || event.touches[0] && event.touches[0].clientX;
-        const offsetY = event.offsetY || event.touches[0] && event.touches[0].clientY;
+        const position = {
+            x: event.offsetX || event.touches[0] && event.touches[0].clientX,
+            y: event.offsetY || event.touches[0] && event.touches[0].clientY
+        };
 
         // TODO: Rename til Raw.pointer
-        Raw.mouse.x = offsetX - canvas.width / window.devicePixelRatio / 2;
-        Raw.mouse.y = offsetY - canvas.height / window.devicePixelRatio / 2;
+        Raw.mouse.x = position.x - Raw.width / 2;
+        Raw.mouse.y = position.y - Raw.height / 2;
 
-        const mouse = {type: "point", position: {x: offsetX, y: offsetY}, radius: 0};
+        const mouse = {type: "point", position, radius: 0};
         mouse.bbox = Raw.makebbox(mouse);
 
         mouseTargetNode = null;
@@ -344,67 +347,67 @@ const Raw = (function () {
         Raw.traverse(Raw.scenegraph, node => {
             if (node.object.collisionNode) {
                 node.bbox = Raw.makebbox(node.object.collisionNode);
-                const overlap = Collision.checkOverlap(mouse, node.object.collisionNode); 
-                if (overlap) mouseTargetNode = node;
+                if (Collision.checkOverlap(mouse, node.object.collisionNode)) {
+                    mouseTargetNode = node;
+                }
             }
         });
     }
     
-    function onMouseDown(event) {
+    function onMouseDown(e) {
         const isPrimaryClick =
-            event.button === 0 &&
-            !event.ctrlKey &&
-            !event.metaKey &&
-            !event.shiftKey &&
-            !event.altKey;
+            e.button === 0 &&
+            !e.ctrlKey &&
+            !e.metaKey &&
+            !e.shiftKey &&
+            !e.altKey;
 
         if (!isPrimaryClick) return;
 
-        setMouseFromEvent(event);
+        setMouseFromEvent(e);
         Raw.mouse.down = true;
 
         if (Raw.settings.debug) console.log("Mouse down:", Raw.mouse.x, Raw.mouse.y, mouseTargetNode && mouseTargetNode.id);
 
         // TODO: Rename onmousedown på noden til onpointerdown osv for alle eventer
         if (mouseTargetNode && mouseTargetNode.object.onmousedown) {
-            mouseTargetNode.object.onmousedown.call(mouseTargetNode, event);
+            mouseTargetNode.object.onmousedown.call(mouseTargetNode, e);
         }
     }
 
-    function onMouseUp(event) {
-        setMouseFromEvent(event);
+    function onMouseUp(e) {
+        setMouseFromEvent(e);
         Raw.mouse.down = false;
 
         if (mouseTargetNode && mouseTargetNode.object.onmouseup) {
-            mouseTargetNode.object.onmouseup.call(mouseTargetNode, event);
+            mouseTargetNode.object.onmouseup.call(mouseTargetNode, e);
         }        
 
-        dragUp(event);
+        dragUp(e);
     }
 
-    function onMouseMove(event) {
-        setMouseFromEvent(event);
+    function onMouseMove(e) {
+        setMouseFromEvent(e);
 
         if (mouseTargetNode && mouseTargetNode.object.onmousemove) {
-            mouseTargetNode.object.onmousemove.call(mouseTargetNode, Raw.mouse.x, Raw.mouse.y, event);
+            mouseTargetNode.object.onmousemove.call(mouseTargetNode, Raw.mouse.x, Raw.mouse.y, e);
         }        
 
-        dragMove(event);
+        dragMove(e);
     }
 
     const drag = {
         active: false,
         pointerId: null,
         target: null,
-        offsetX: 0,
-        offsetY: 0
+        offset: {x: 0, y: 0},
     };
 
-    Raw.startDrag = function(target, event) {
+    Raw.startDrag = function(target, e) {
         drag.active = true;
         drag.target = target;
 
-        dragDown(event);
+        dragDown(e);
     }
 
     function dragDown(e) {
@@ -417,9 +420,7 @@ const Raw = (function () {
         
         drag.pointerId = e.pointerId;
         
-        // TODO: Bruk vektorer her
-        drag.offsetX = pos.x - drag.target.x;
-        drag.offsetY = pos.y - drag.target.y;
+        drag.offset = subtract(pos, drag.target);
     }
 
     function dragMove(e) {
@@ -430,8 +431,9 @@ const Raw = (function () {
             y: e.clientY,
         };
 
-        drag.target.x = pos.x - drag.offsetX;
-        drag.target.y = pos.y - drag.offsetY;
+        // Disse må være in place, fordi target er ekstern verdi som kan være pekt til andre steder
+        drag.target.x = pos.x - drag.offset.x;
+        drag.target.y = pos.y - drag.offset.y;
     }
 
     function dragUp(e) {
@@ -446,25 +448,27 @@ const Raw = (function () {
         canvas = canvasElement;
 
         // TODO: Rename alle disse til pointerXX
-        canvas.addEventListener("pointerdown", onMouseDown);
-        canvas.addEventListener("pointerup", onMouseUp);
-        canvas.addEventListener("pointermove", onMouseMove);
-        canvas.addEventListener('pointercancel', dragUp);
-        canvas.addEventListener('lostpointercapture', dragUp);
+        const el = canvas.addEventListener;
+        el("pointerdown", onMouseDown);
+        el("pointerup", onMouseUp);
+        el("pointermove", onMouseMove);
+        el('pointercancel', dragUp);
+        el('lostpointercapture', dragUp);
 
-        canvas.style.width = "inherit"; // To fill parent
-        canvas.style.height = "inherit";
-        canvas.style.display = "block"; // To not be inline
-
+        const s = canvas.style;
+        s.width = "inherit"; // To fill parent
+        s.height = "inherit";
+        s.display = "block"; // To not be inline
         // For dragging:
-        canvas.style.touchAction = "none";
-        canvas.style.userSelect = "none";
-        canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+        s.touchAction = "none";
+        s.userSelect = "none";
+        
+        el('touchmove', e => e.preventDefault(), { passive: false });
 
         ctx = canvas.getContext("2d");
 
         Raw.resize();
-        window.addEventListener("resize", (event) => Raw.resize());
+        window.addEventListener("resize", () => Raw.resize());
     }
 
     return Raw;
