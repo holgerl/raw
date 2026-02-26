@@ -285,7 +285,7 @@ const Collision = {};
             if (previousCollisions[nodeId] !== otherNodeId) {
                 const node = nodes.find(n => n.id === nodeId);
                 const otherNode = nodes.find(n => n.id === otherNodeId);
-                node.oncollision && node.oncollision(otherNode, "in");
+                node && otherNode && node.oncollision && node.oncollision(otherNode, "in");
             }
         });
 
@@ -295,7 +295,7 @@ const Collision = {};
             if (collisions[nodeId] !== otherNodeId) {
                 const node = nodes.find(n => n.id === nodeId);
                 const otherNode = nodes.find(n => n.id === otherNodeId);
-                node.oncollision && node.oncollision(otherNode, "out");
+                node && otherNode && node.oncollision && node.oncollision(otherNode, "out");
             }
         });
 
