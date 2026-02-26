@@ -165,12 +165,12 @@ const Raw = (function () {
                 const oncollision = object.oncollision ? object.oncollision.bind(node) : null;
 
                 if (Array.isArray(object.hitbox)) {
-                    object.collisionNode = Raw.collision.addBody(                                    // TODO: Finn noen kortere navn på fisse feltene:
-                        {id: node.id, position: object.position, points: object.hitbox, oncollision, group: object.collisionGroup, affectedByGroups: object.collisionAffectedByGroups}
+                    object.collisionNode = Raw.collision.addBody(
+                        {...node, ...object, points: object.hitbox, oncollision}
                     );
                 } else {
                     object.collisionNode = Raw.collision.addPoint(
-                        {id: node.id, position: object.hitbox.position, radius: object.hitbox.radius, oncollision, group: object.collisionGroup, affectedByGroups: object.collisionAffectedByGroups}
+                        {...node, ...object, ...object.hitbox, oncollision}
                     );
                 }
             }

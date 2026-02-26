@@ -18,7 +18,7 @@ const Collision = {};
         return addNode({...point,
             type: "point",
             group: point.group || 0,
-            affectedByGroups: point.affectedByGroups || [0],
+            mask: point.mask || [0], // List of groups affecting this element
             radius: point.radius || 0,
         });
     };
@@ -27,7 +27,7 @@ const Collision = {};
         return addNode({...body,
             type: "body",
             group: body.group || 0,
-            affectedByGroups: body.affectedByGroups || [0],
+            mask: body.mask || [0],
             points: body.points || [],
         });
     };
@@ -265,7 +265,7 @@ const Collision = {};
         });
 
         nodes.forEach(node => {
-            node.affectedByGroups.forEach(group => {
+            node.mask.forEach(group => {
                 // TODO: Lag et hashmap for grupper
                 const affectedByNodes = nodes.filter(n => n.group === group);
 
