@@ -32,6 +32,14 @@ const Raw = (function () {
         callbackAfter(node);
     }
 
+    function handleTargets(node) {
+        for (let prop in node.target) {
+            if (prop === "speed") continue;
+            const lerpFunc = node[prop].x !== undefined ? lerpVectors : lerp;
+            node[prop] = lerpFunc(node[prop], node.target[prop], node.target.speed);
+        }
+    }
+
     function measureFps(nowMillis) {
         const fpsDeltaMillis = nowMillis - fpsMillis;
         fpsCounter++;
@@ -103,36 +111,26 @@ const Raw = (function () {
         Raw.topLeft = scale({x: -Raw.width/2, y: -Raw.height/2}, 1/c.scale);
         Raw.bottomRight = scale({x: Raw.width/2, y: Raw.height/2}, 1/c.scale);
     }
-    
-    const c = Raw.camera;
 
     Raw.scenegraph = {
         id: 'root',
         object: { // TODO: Rename til data, og bruk den kun for data, ikke funksjoner som transform
             update: function() {
-                if (c.target.zoom !== undefined) {
-                    c.zoom = lerp(c.zoom, c.target.zoom, c.target.speed);
-                }
-                if (c.target.rotation !== undefined) {
-                    c.rotation = lerp(c.rotation, c.target.rotation, c.target.speed);
-                }
-                if (c.target.position !== undefined) {
-                    c.position = lerpVectors(c.position, c.target.position, c.target.speed);
-                }
+                handleTargets(Raw.camera);
             },    
             transform: function(ctx, canvas) {
                 const center = { // Dette setter koordinat (0,0) i scenen midt på canvas, som er praktisk
                     x: Raw.width/2,
                     y: Raw.height/2,
                 }
-                const translate = subtract(center, c.position);
+                const translate = subtract(center, Raw.camera.position);
 
                 updateCamera();
 
                 // TODO: Dette blir ikke riktig når scale og translate gjøres sammen. Må nok bruke pivot riktig slik som i scenegraph ellers
                 ctx.translate(translate.x, translate.y);
-                ctx.rotate(c.rotation);
-                ctx.scale(c.scale, c.scale);
+                ctx.rotate(Raw.camera.rotation);
+                ctx.scale(Raw.camera.scale, Raw.camera.scale);
             },
         },
         // TODO: Origin burde jo også ligge her. Og det er jo dumt at så mange interne verdier ligger på object.
@@ -216,15 +214,7 @@ const Raw = (function () {
                 if (obj) {
                     if (obj.update) obj.update.call(node);
 
-                    if (node.target.position) {
-                        node.position = lerpVectors(node.position, node.target.position, node.target.speed);
-                    }
-                    if (node.target.rotation !== undefined) {
-                        node.rotation = lerp(node.rotation, node.target.rotation, node.target.speed);
-                    }
-                    if (node.target.scale !== undefined) {
-                        node.scale = lerpVectors(node.scale, node.target.scale, node.target.speed);
-                    }
+                    handleTargets(node);
 
                     ctx.save();
 
