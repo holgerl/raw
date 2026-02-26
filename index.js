@@ -162,15 +162,9 @@ const Raw = (function () {
             if (object.hitbox) {
                 const oncollision = object.oncollision ? object.oncollision.bind(node) : null;
 
-                if (Array.isArray(object.hitbox)) {
-                    object.collisionNode = Raw.collision.addBody(
-                        {...node, ...object, points: object.hitbox, oncollision}
-                    );
-                } else {
-                    object.collisionNode = Raw.collision.addPoint(
-                        {...node, ...object, ...object.hitbox, oncollision}
-                    );
-                }
+                object.collisionNode = Array.isArray(object.hitbox) 
+                    ? Raw.collision.addBody({...node, ...object, points: object.hitbox, oncollision}) 
+                    : Raw.collision.addPoint({...node, ...object, ...object.hitbox, oncollision});
             }
 
             parent.children.push(node);
