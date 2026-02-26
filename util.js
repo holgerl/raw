@@ -59,9 +59,7 @@ function easeInOutWave(t) {
     return repeatFlipped(f, t);
 }
 
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
+const lerp = (a, b, t) => a + (b - a) * t;
 
 function clamp(value, from, to) {
     let min = from;
@@ -81,54 +79,31 @@ function map(value, inMin, inMax, outMin, outMax, clampValue = false) {
     return clampValue ? clamp(mapped, outMin, outMax) : mapped;
 }
 
-function length(vector) {
-    return Math.sqrt(vector.x * vector.x + vector.y * vector.y);
-}
+const length = (vector) => Math.sqrt(vector.x * vector.x + vector.y * vector.y);
 
-function distance(vectorA, vectorB) {
-    const diff = {x: vectorB.x - vectorA.x, y: vectorB.y - vectorA.y};
-    return length(diff);
-}
+const distance = (vectorA, vectorB) => length({x: vectorB.x - vectorA.x, y: vectorB.y - vectorA.y});
 
 function normalize(vector) {
     const len = length(vector);
     return len === 0 ? {x: 0, y: 0} : {x: vector.x / len, y: vector.y / len};
 }
 
-function copy(vec) {
-    return {x: vec.x, y: vec.y};
-}
+const copy = (vec) => ({x: vec.x, y: vec.y});
 
-function scale(vector, scalar) {
-    return {x: vector.x * scalar, y: vector.y * scalar};
-}
+const scale = (vector, scalar) => ({x: vector.x * scalar, y: vector.y * scalar});
 
-function add(vectorA, vectorB) {
-    return {x: vectorA.x + vectorB.x, y: vectorA.y + vectorB.y};
-}
+const add =      (vectorA, vectorB) => ({x: vectorA.x + vectorB.x, y: vectorA.y + vectorB.y});
+const subtract = (vectorA, vectorB) => ({x: vectorA.x - vectorB.x, y: vectorA.y - vectorB.y});
 
-function subtract(vectorA, vectorB) {
-    return {x: vectorA.x - vectorB.x, y: vectorA.y - vectorB.y};
-}
+const fromTo = (from, to) => subtract(to, from);
 
-function fromTo(from, to) {
-    return subtract(to, from);
-}
+const random = (from, to) => from + Math.random() * (to - from);
+const randomInt = (from, to) => Math.floor(random(from, to + 1));
 
-function random(from, to) {
-    return from + Math.random() * (to - from);
-}
-
-function randomInt(from, to) {
-    return Math.floor(random(from, to + 1));
-}
-
-function lerpVectors(vectorA, vectorB, t) {
-    return {
-        x: lerp(vectorA.x, vectorB.x, t),
-        y: lerp(vectorA.y, vectorB.y, t)
-    };
-}
+const lerpVectors = (vectorA, vectorB, t) => ({
+    x: lerp(vectorA.x, vectorB.x, t),
+    y: lerp(vectorA.y, vectorB.y, t)
+});
 
 // TODO: Vurder å standardisere på at funksjoner som tar inn w og h tar inn vektor i stedet
 function gridDistribution(w, h = null) {
@@ -155,9 +130,8 @@ function gridDistribution(w, h = null) {
 }
 
 function pretty(vector, decimals = 2, length = 4) {
-    return String(vector.x.toFixed(decimals)).padStart(length, " ")
-            + ","
-            + String(vector.y.toFixed(decimals)).padStart(length, " ");
+    const p = (n) => String(n.toFixed(decimals)).padStart(length, " ");
+    return p(vector.x) + "," + p(vector.y);
 }
 
 const remove = (array, element) => array.splice(array.indexOf(element), 1);
