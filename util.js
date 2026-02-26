@@ -104,20 +104,11 @@ function scale(vector, scalar) {
 }
 
 function add(vectorA, vectorB) {
-    return {x: vectorA.x + vectorB.x, y: vectorA.y + vectorB.y, z: vectorA.z + vectorB.z};
+    return {x: vectorA.x + vectorB.x, y: vectorA.y + vectorB.y};
 }
 
-// TODO: Gjør slik at alle vektorfunksjoner støtter 3D
 function subtract(vectorA, vectorB) {
-    return {x: vectorA.x - vectorB.x, y: vectorA.y - vectorB.y, z: vectorA.z - vectorB.z};
-}
-
-function cross(vectorA, vectorB) {
-  const normalX = vectorA.y * vectorB.z - vectorA.z * vectorB.y;
-  const normalY = vectorA.z * vectorB.x - vectorA.x * vectorB.z;
-  const normalZ = vectorA.x * vectorB.y - vectorA.y * vectorB.x;
-
-  return { x: normalX, y: normalY, z: normalZ };
+    return {x: vectorA.x - vectorB.x, y: vectorA.y - vectorB.y};
 }
 
 function fromTo(from, to) {
@@ -137,26 +128,6 @@ function lerpVectors(vectorA, vectorB, t) {
         x: lerp(vectorA.x, vectorB.x, t),
         y: lerp(vectorA.y, vectorB.y, t)
     };
-}
-
-function projectPointOntoLine(point, lineA, lineB) {
-    const A = point.x - lineA.x;
-    const B = point.y - lineA.y;
-    const C = lineB.x - lineA.x;
-    const D = lineB.y - lineA.y;
-
-    const dot = A * C + B * D;
-    const len_sq = C * C + D * D;
-    let param = -1;
-    if (len_sq != 0) // in case of 0 length line
-        param = dot / len_sq;
-
-    let xx = lineA.x + param * C;
-    let yy = lineA.y + param * D;
-
-    const side = C * B - D * A;
-
-    return {x: xx, y: yy, param, side};
 }
 
 // TODO: Vurder å standardisere på at funksjoner som tar inn w og h tar inn vektor i stedet

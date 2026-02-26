@@ -8,7 +8,7 @@ const Raw = (function () {
     // #include "./timer.js"
 
     Object.assign(Raw, {
-        lerp, clamp, fromTo, map, distance, copy, add, subtract, scale, cross, normalize, random, randomInt, bodyCenter, 
+        lerp, clamp, fromTo, map, distance, copy, add, subtract, scale, normalize, random, randomInt, 
         gridDistribution, traverse, triangleWave, easeInOutWave, easeInWave, easeOutWave, easeOutCubicWave, sineWave, cosineWave, 
         timer,
         collision: Collision 
@@ -173,7 +173,6 @@ const Raw = (function () {
                         {id: node.id, position: object.hitbox.position, radius: object.hitbox.radius, oncollision, group: object.collisionGroup, affectedByGroups: object.collisionAffectedByGroups}
                     );
                 }
-                
             }
 
             parent.children.push(node);
@@ -385,7 +384,7 @@ const Raw = (function () {
         setMouseFromEvent(e);
 
         if (hoverNode && hoverNode.object.onmousemove) {
-            hoverNode.object.onmousemove.call(hoverNode, Raw.mouse.x, Raw.mouse.y, e);
+            hoverNode.object.onmousemove.call(hoverNode, e);
         }        
 
         dragMove(e);
