@@ -159,3 +159,5 @@ function pretty(vector, decimals = 2, length = 4) {
             + ","
             + String(vector.y.toFixed(decimals)).padStart(length, " ");
 }
+
+const remove = (array, element) => array.splice(array.indexOf(element), 1);

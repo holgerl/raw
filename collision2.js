@@ -8,7 +8,7 @@ const Collision = {};
 
     function addNode(properties) {
         const node = {...properties};
-        node.remove = () => nodes.splice(nodes.indexOf(node), 1);
+        node.remove = () => remove(nodes, node);
         nodes.push(node);
         return node;
     }

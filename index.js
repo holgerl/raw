@@ -157,7 +157,7 @@ const Raw = (function () {
                 add: this.add,
                 remove: function() {
                     object.collisionNode && object.collisionNode.remove();
-                    parent.children.splice(parent.children.indexOf(this), 1);
+                    remove(parent.children, this);
                 }
             };
 
@@ -285,13 +285,6 @@ const Raw = (function () {
 
         frameCount++;
     };
-
-    function remove(array, element) {
-        const index = array.indexOf(element);
-        if (index >= 0) {
-            return array.splice(index, 1);
-        }
-    }
 
     // TODO: Skal sånne ting være en funksjon på noden heller? Gjelder flere ting som f.eks. Raw.startDrag
     Raw.bringToFront = (node) => {
