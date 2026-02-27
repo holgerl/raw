@@ -257,6 +257,7 @@ const Collision = {};
                         y: translated.x * sin + translated.y * cos
                     };
                     
+                    // TODO: Ser ikke ut til å ta hensyn til camera zoom
                     p.global = add(add(rotated, center), node.position);
                 });
             }
@@ -273,7 +274,8 @@ const Collision = {};
                     if (affectedByNode === node) return; // Don't check collision with self
                     
                     if (Collision.checkOverlap(node, affectedByNode)) {
-                        collisions[node.id] = affectedByNode.id;
+                        collisions[node.id] = collisions[node.id] || [];
+                        collisions[node.id].push(affectedByNode.id);
                     }
                 });
             });
@@ -281,21 +283,23 @@ const Collision = {};
 
         // For each collision that is not in previousCollisions, call oncollision "in"
         for (const id in collisions) {
-            const otherId = collisions[id];
-            if (previousCollisions[id] !== otherId) {
-                const node = nodes.find(n => n.id === id);
-                const other = nodes.find(n => n.id === otherId);
-                node && other && node.oncollision && node.oncollision(other, "in");
+            for (const otherId of collisions[id]) {
+                if (!previousCollisions[id] || !previousCollisions[id].includes(otherId)) {
+                    const node = nodes.find(n => n.id === id);
+                    const other = nodes.find(n => n.id === otherId);
+                    node && other && node.oncollision && node.oncollision(other, "in");
+                }
             }
         };
 
         // For each collision that is in previousCollisions but not in collisions, call oncollision "out"
         for (const id in previousCollisions) {
-            const otherId = previousCollisions[id];
-            if (collisions[id] !== otherId) {
-                const node = nodes.find(n => n.id === id);
-                const other = nodes.find(n => n.id === otherId);
-                node && other && node.oncollision && node.oncollision(other, "out");
+            for (const otherId of previousCollisions[id]) {
+                if (!collisions[id] || !collisions[id].includes(otherId)) {
+                    const node = nodes.find(n => n.id === id);
+                    const other = nodes.find(n => n.id === otherId);
+                    node && other && node.oncollision && node.oncollision(other, "out");
+                }
             }
         };
 
