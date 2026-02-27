@@ -7,6 +7,7 @@ const hostname = '0.0.0.0'; // Listen on all interfaces (for local network acces
 const port = 8080;
 
 const server = http.createServer((req, res) => {
+  console.log(`Request for ${req.url} received at ${new Date().toISOString()}`);
   // Construct the file path relative to the current directory
   let filePath = '.' + req.url;
   if (filePath === './') {
@@ -35,8 +36,13 @@ const server = http.createServer((req, res) => {
   fs.readFile(filePath, (error, content) => {
     if (error) {
       if (error.code === 'ENOENT') {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('404 File Not Found', 'utf-8');
+        if (filePath == "./favicon.ico") {
+          res.writeHead(204); // Ignore missing favicon requests with "No Content" status
+          res.end();
+        } else {
+          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          res.end('404 File Not Found', 'utf-8');
+        }
       } else {
         res.writeHead(500);
         res.end('Sorry, check with the site admin for error: ' + error.code + '..');
