@@ -177,11 +177,12 @@ const Raw = (function () {
         debug: false,
         clearOnFrame: true,
         clearColor: null, // null betyr transparent vha clearRect, ikke fillRect
+        pause: false,
     };
 
     Raw.onFrame = function() {
         const nowMillis = performance.now();
-        Raw.deltaSeconds = (nowMillis - lastTimeMillis) / 1000;
+        Raw.deltaSeconds = Raw.settings.pause ? 0 : (nowMillis - lastTimeMillis) / 1000;
         if (Raw.deltaSeconds > 0.1) Raw.deltaSeconds = 1/60; // Unngår altfor store hopp når andre faner vises
         lastTimeMillis = nowMillis;
         Raw.timeSeconds += Raw.deltaSeconds;
