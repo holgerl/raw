@@ -26,6 +26,10 @@ See all examples at https://holgerl.github.io/raw/examples/index.html
 
 ![Collision detection with complex polygons](./examples/recordings/collision.gif)
 
+### Timer with phases
+
+![Timer with phases](./examples/recordings/timer.gif)
+
 ### Grid distribution
 
 ![Grid distribution](./examples/recordings/grid.gif)
