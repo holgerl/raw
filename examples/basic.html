@@ -1,14 +1,30 @@
-# Raw Canvas
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Raw</title>
+        <script src="../dist/raw.build.js"></script>
 
-Raw Canvas is an imperative framework for graphics and animations in HTML Canvas. 
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+            }
 
-At 10 kB unzipped it is minimal, no-build, and bare bones exposing the raw canvas. 
+            #myCanvas {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head> 
+<body>
+    <canvas id="myCanvas"></canvas>
 
-## Usage
+    <script>
+        /// Basic animated scene
 
-```javascript
-<script src="https://holgerl.github.io/raw/dist/raw.build.js"></script>
-<script>
         Raw.init(document.getElementById('myCanvas'));
         Raw.settings.clearColor = "#000";
 
@@ -31,5 +47,6 @@ At 10 kB unzipped it is minimal, no-build, and bare bones exposing the raw canva
         });
 
         square.scale = {x: 1.5, y: 1.5};
-</script>
-```
+    </script>
+</body>
+</html>
