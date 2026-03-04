@@ -14,7 +14,25 @@ See all examples at https://holgerl.github.io/raw/examples/index.html
 
 ![Hierarchical scene graph](./examples/recordings/scenegraph.gif)
 
-#
+### Staggered animation and camera movement
+
+![Staggered animation and camera movement](./examples/recordings/arrows.gif)
+
+### Dragging with mouse and touch
+
+![Dragging with mouse and touch](./examples/recordings/drag.gif)
+
+### Collision detection with complex polygons
+
+![Collision detection with complex polygons](./examples/recordings/collision.gif)
+
+### Grid distribution
+
+![Grid distribution](./examples/recordings/grid.gif)
+
+### Easing waves
+
+![Easing waves](./examples/recordings/wave.gif)
 
 ## Usage
 
