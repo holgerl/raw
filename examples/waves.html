@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Raw</title>
+        <script src="../dist/raw.build.js"></script>
+
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            #myContainer {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head> 
+<body>
+    <div id="myContainer">
+        <canvas id="myCanvas"></canvas>
+    </div>
+
+    <script>
+        /// Easing waves
+
+        Raw.init(document.getElementById('myCanvas'));
+        Raw.settings.clearColor = "#000";
+
+        function loop() {
+            Raw.onFrame();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+
+        window.addEventListener("keydown", (event) => {
+            event.key == "d" && (Raw.settings.debug = !Raw.settings.debug);
+        });
+
+        const waves = [Raw.triangleWave, Raw.sineWave, Raw.easeInWave /*, Raw.easeOutCubicWave*/, Raw.easeOutExpWave];
+
+        const waveHeight = 50;
+        const padding = 10;
+        const blockHeight = waveHeight + padding;
+
+        const markersGroup = Raw.scenegraph.add({id: "markersGroup"});
+        markersGroup.position = {x: -140, y: blockHeight + (waves.length) * -blockHeight / 2};
+
+        waves.forEach((waveFunc, index) => {
+            const markers = markersGroup.add({
+                draw: function(ctx, canvas) {
+                    ctx.fillStyle = "#fff";
+                    ctx.beginPath();
+                    ctx.arc(waveFunc(-Raw.timeSeconds) * 60, 0, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                },
+            });
+            markers.position = {x: 0, y: index * blockHeight - waveHeight/2};
+        });
+
+        const waveGroup = Raw.scenegraph.add({id: "waveGroup"});
+        waveGroup.position = {x: -50, y: markersGroup.position.y};
+
+        waves.forEach((waveFunc, index) => {
+            const waveWidth = 200;
+            const wave = waveGroup.add({
+                draw: function(ctx, canvas) {
+                    ctx.strokeStyle = "#fff";
+                    ctx.lineWidth = 2;
+                    const wavetops = 2;
+                    ctx.beginPath();
+                    for (let x = 0; x < waveWidth; x++) {
+                        const t = x/waveWidth * wavetops*2;
+                        const y = -waveHeight * waveFunc(t - Raw.timeSeconds); 
+                        
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                },
+            });
+            wave.position = {x: 0, y: index * blockHeight};
+        });
+    </script>
+</body>
+</html>

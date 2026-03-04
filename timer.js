@@ -44,12 +44,15 @@ function timer({lengthSeconds = 2147483, onStart = () => {}, onEnd = () => {}} =
             remainingSeconds = lengthSeconds;
             this.start();
         },
-        counter() { return counter; }, // TODO: Kalle denne phase, og så la den være 0 før det starter, og så øke til 1 ved start. Da blir det mer sekvensielle faser
+        // TODO: Kalle denne phase, og så la den være 0 før det starter, og så øke til 1 ved start. Da blir det mer sekvensielle faser
+        // ELLER, kall den step?
+        counter() { return counter; }, 
         value() { // TODO: value fortsetter å gå når man pauser
             const relativeAge = (performance.now() - startedAtMillis) / lengthSeconds / 1000;
             return clamp(relativeAge, 0, 1); 
         },
         running() { return !!id; },
+        // TODO: Ha en phaseSeconds og en totalSeconds som er innenfor phase og totalt (gitt at timer får vite totalt antall phases)
         elapsedSeconds() {
             if (!startedAtMillis) return 0;
             return id 

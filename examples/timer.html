@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Raw</title>
+        <script src="../dist/raw.build.js"></script>
+
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            #myContainer {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head> 
+<body>
+    <div id="myContainer">
+        <canvas id="myCanvas"></canvas>
+    </div>
+
+    <script>
+        /// Timer with phases
+
+        Raw.init(document.getElementById('myCanvas'));
+        Raw.settings.clearColor = "#000";
+
+        function loop() {
+            Raw.onFrame();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+
+        window.addEventListener("keydown", (event) => {
+            event.key == "d" && (Raw.settings.debug = !Raw.settings.debug);
+        });
+
+        const phaseLengths = [1, 0.75, 1.5, 1.25]; // In seconds
+        let accSeconds = 0;
+
+        const timer = Raw.timer({
+            lengthSeconds: phaseLengths[0],
+            onStart: () => {},
+            onEnd: () => {
+                const step = timer.counter() % phaseLengths.length; // TODO: La totalt antall steps være en del av timeren, og la den modde counteren og holde track på totale accSeconds?
+                accSeconds += phaseLengths[step - 1];
+                if (step == 0) accSeconds = 0;
+
+                timer.setLength(phaseLengths[step]);
+                timer.start();
+            }
+        });
+
+        timer.start();
+
+        const timelineSize = 300;
+
+        const timeline = Raw.scenegraph.add({
+            origin: {x: timelineSize/2, y: 0},
+            draw: function(ctx, canvas) {
+                ctx.strokeStyle = "#fff";
+                ctx.fillStyle = "#fff";
+                ctx.lineWidth = 2;
+
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(timelineSize, 0);
+                ctx.stroke();
+
+                const totalSeconds = phaseLengths.reduce((a, b) => a + b, 0);
+                const ticksPerSecond = 4;
+
+                for (let x = 0; x <= timelineSize; x += timelineSize / totalSeconds / ticksPerSecond) {
+                    const height = 6;
+                    ctx.moveTo(x, -height/2);
+                    ctx.lineTo(x, height/2);
+                    ctx.stroke();
+                }
+
+                let acc = 0;
+                for (let phaseLength of [...phaseLengths, 0]) {
+                    const height = 18;
+                    const x = acc / totalSeconds * timelineSize;
+                    ctx.moveTo(x, -height/2);
+                    ctx.lineTo(x, height/2);
+                    ctx.stroke();
+
+                    ctx.font = "12px sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "top";
+                    ctx.fillText(acc + "s", x, height/2 + 6);
+
+                    acc += phaseLength;
+                }
+
+                const markerPosition = (accSeconds + timer.elapsedSeconds()) / totalSeconds * timelineSize;
+                ctx.beginPath();
+                ctx.arc(markerPosition, -18, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        });
+        timeline.position.y = Raw.topLeft.y + 50;
+
+        const pupilOffsets = [
+            {x: 5, y: -5},
+            {x: 5, y: 5},
+            {x: -5, y: -5},
+            {x: -5, y: 5},
+        ];
+
+        const eyes = [-40, 40].forEach(x => {
+            const eye = Raw.scenegraph.add({
+                draw: function(ctx) {
+                    ctx.fillStyle = "#fff";
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 25, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+
+            eye.position.x = x;
+
+            const pupil = eye.add({
+                update: function() {
+                    this.target.position = pupilOffsets[timer.counter() % pupilOffsets.length];
+                },
+                draw: function(ctx) {
+                    ctx.fillStyle = "#000";
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 25/2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+        });
+
+        const smileFactors = [1, 2, -1, 0];
+
+        const mouth = Raw.scenegraph.add({
+            update: function() {
+                this.smileFactor = this.smileFactor || 0; // TODO: Flytt denne til rotnivå på noden når object er fjernet
+                this.target.smileFactor = smileFactors[timer.counter() % smileFactors.length];
+            },
+            draw: function(ctx) {
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 10;
+                ctx.lineCap = "round";
+                ctx.beginPath();
+                ctx.moveTo(-35, 0);
+                ctx.quadraticCurveTo(0, this.smileFactor * 20, 35, 0);
+                ctx.stroke();
+            }
+        });
+
+        mouth.position.y = 60;
+    </script>
+</body>
+</html>

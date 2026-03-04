@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Raw</title>
+        <script src="../dist/raw.build.js"></script>
+
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            #myContainer {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head> 
+<body>
+    <div id="myContainer">
+        <canvas id="myCanvas"></canvas>
+    </div>
+
+    <script>
+        /// Staggered animation and camera movement
+
+        Raw.init(document.getElementById('myCanvas'));
+        Raw.settings.clearColor = "#000";
+
+        function loop() {
+            Raw.onFrame();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+
+        window.addEventListener("keydown", (event) => {
+            event.key == "d" && (Raw.settings.debug = !Raw.settings.debug);
+        });
+
+        const vw = window.innerWidth / 100;
+        const vh = window.innerHeight / 100;
+
+        function drawArrow(ctx) {
+            const arrowHeight = 10 * vw;
+            const arrowWidth = 8 * vw;
+            const lineWidth = 1.6 * vw;
+
+            ctx.lineWidth = lineWidth;
+            ctx.strokeStyle = "#fff";
+            ctx.lineCap = "square";
+            ctx.lineJoin = "square";
+            ctx.beginPath();
+            ctx.moveTo(0, arrowHeight/2);
+            ctx.lineTo(0, -arrowHeight/2 + lineWidth);
+            ctx.moveTo(-arrowWidth/2, -arrowHeight/2 + arrowWidth/2);
+            ctx.lineTo(0, -arrowHeight/2);
+            ctx.lineTo(arrowWidth/2, -arrowHeight/2 + arrowWidth/2);
+            ctx.stroke();
+        }
+
+        Raw.gridDistribution(21, 45).forEach((position) => {
+            const arrow = Raw.scenegraph.add({
+                draw: function(ctx, canvas) {
+                    drawArrow(ctx);
+                }
+            });
+
+            const index = position.centered.index
+            const spacing = Raw.width / 8;
+            arrow.position = Raw.scale(index, spacing);
+
+            const rotations = [0, 0.25, 0.5, 0.75, 1]; 
+            const lengths = [0.6, 0.3, 0.3, 0.3, 1];  
+            const staggerSeconds = 0.2 * (Math.abs(index.x) + Math.abs(index.y));  
+
+            const timer = Raw.timer({ 
+                lengthSeconds: staggerSeconds + lengths[0], 
+                // TODO: Kanskje ha en nofSteps som gjør at counter() blir moddet med den?
+                onStart: () => { 
+                    const step = timer.counter() % rotations.length; 
+                    arrow.target.rotation = rotations[step] * Math.PI; 
+                }, 
+                onEnd: () => {
+                    const step = timer.counter() % rotations.length;
+                    timer.setLength(lengths[step]);
+                    timer.start();
+                } 
+            }); 
+
+            timer.start();
+        });
+
+        const zooms = [0.5, -1, 0.25];
+        const positions = [
+            {x:0, y:0}, 
+            {x:0, y:25 * vh}, 
+            {x:75 * vw, y:75 * vh}
+        ];
+        Raw.camera.zoom = zooms[0];
+        Raw.camera.position = positions[0];
+
+        const cameraTimer = Raw.timer({
+            lengthSeconds: 2,
+            onStart: () => {
+                const step = cameraTimer.counter() % zooms.length;
+                Raw.camera.target.zoom = zooms[step];
+                Raw.camera.target.position = positions[step];
+            },
+            onEnd: () => {
+                cameraTimer.start();
+            }
+        });
+
+        cameraTimer.start();
+    </script>
+</body>
+</html>

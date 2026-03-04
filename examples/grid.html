@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Raw</title>
+        <script src="../dist/raw.build.js"></script>
+
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            #myContainer {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head> 
+<body>
+    <div id="myContainer">
+        <canvas id="myCanvas"></canvas>
+    </div>
+
+    <script>
+        /// Grid distribution
+
+        Raw.init(document.getElementById('myCanvas'));
+        Raw.settings.clearColor = "#aaa";
+
+        function loop() {
+            Raw.onFrame();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+
+        window.addEventListener("keydown", (event) => {
+            event.key == "d" && (Raw.settings.debug = !Raw.settings.debug);
+        });
+
+        let dimensions = {x: 5, y: 3};
+        let grid = Raw.grid(dimensions);
+
+        window.setInterval(() => {
+            dimensions.x = Raw.randomInt(2, 6);
+            dimensions.y = Raw.randomInt(1, 5);
+            grid = Raw.grid(dimensions);
+        }, 2*1000);
+
+        const cells = Raw.scenegraph.add({
+            update: function() {
+                cells.position = {x: -Raw.width/2, y: -Raw.height/2};
+            }
+        });
+
+        const maxCells = 100;
+        for (let i = 0; i < maxCells; i++) {
+            const color = ["#000", "#fff", "#777"][i % 3];
+            
+            const cell = cells.add({
+                id: i,
+                update: function() {
+                    if (i >= grid.length) return;
+
+                     // TODO: Støtt vektor som argument til Raw.scale, og endre Raw.width og Raw.height til å være en vektor med navn dimensions eller size
+                    this.target.position = {
+                        x: grid[i].topLeft.x * Raw.width,
+                        y: grid[i].topLeft.y * Raw.height
+                    };
+                    this.target.cellSize = {
+                        x: grid[i].size.x * Raw.width, 
+                        y: grid[i].size.y * Raw.height
+                    };
+
+                    this.cellSize = this.cellSize || {x: 0, y: 0}; // TODO: Flytt denne til rotnivå på noden når object er fjernet
+                },
+                draw: function(ctx) {
+                    if (i >= grid.length) return;
+
+                    ctx.fillStyle = color;
+                    const overlap = 0.5; // Avoid sub pixel gaps between cells on some displays
+                    ctx.fillRect(0, 0, this.cellSize.x + overlap, this.cellSize.y + overlap);
+
+                    // Draw circle and text in contrast color:
+                    ctx.strokeStyle = `#777`;
+                    ctx.lineWidth = 7;
+                    ctx.globalCompositeOperation = "difference";
+                    ctx.beginPath();
+                    ctx.arc(this.cellSize.x/2, this.cellSize.y/2, 14, 0, 2*Math.PI);
+                    ctx.stroke();
+
+                    ctx.font = "16px monospace";
+                    ctx.fillStyle = "#777";
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "top";
+                    ctx.fillText(i, 4, 4);
+
+                    ctx.globalCompositeOperation = "source-over";
+                }
+            });
+        }
+    </script>
+</body>
+</html>

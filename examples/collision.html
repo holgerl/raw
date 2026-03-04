@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Raw</title>
+        <script src="../dist/raw.build.js"></script>
+
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            #myCanvas {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head> 
+<body>
+    <canvas id="myCanvas"></canvas>
+
+    <script>
+        /// Collision detection with complex polygons
+        // TODO: Bruk konkave former også, siden det er ekstra avansert
+
+        Raw.init(document.getElementById('myCanvas'));
+        
+        function loop() {
+            Raw.onFrame();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+
+        Raw.settings.clearColor = "#000";
+        Raw.settings.debug = false;
+
+        window.addEventListener("keydown", (event) => {
+            event.key == "d" && (Raw.settings.debug = !Raw.settings.debug);
+        });
+
+        window.addEventListener("keydown", (event) => {
+            event.key == "p" && (Raw.settings.pause = !Raw.settings.pause);
+        });
+
+        function pauseFor(seconds) {
+            Raw.settings.pause = true;
+            setTimeout(() => {
+                Raw.settings.pause = false;
+            }, seconds * 1000);
+        }
+
+        function drawText(ctx, text) {
+            ctx.font = "16px sans-serif";
+            ctx.fillStyle = "#fff";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(text, 0, 0);
+        }
+
+        const points1 = [
+            {x: -10, y: -30},
+            {x: 10, y: -30},
+            {x: 15, y: 10},
+            {x: -30, y: 30},
+            {x: -40, y: -10},
+        ];
+        const verticallyMovingBody = Raw.scenegraph.add({
+            id: "a",
+            hitbox: points1,
+            colorCounter: 1,
+            update: function() {
+                const speed = 0.5;
+                this.position.x = 30;
+                this.position.y = Raw.lerp(100, -50, Raw.triangleWave(Raw.timeSeconds * speed));
+            },
+            draw: function(ctx, canvas) {
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(points1[0].x, points1[0].y);
+                for (let i = 1; i < points1.length; i++) {
+                    ctx.lineTo(points1[i].x, points1[i].y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+
+                drawText(ctx, this.object.colorCounter);
+            },
+            oncollision: function(other, direction) {
+                this.object.colorCounter += direction == "in" ? 1 : -1;
+                direction == "in" && pauseFor(1);
+                //console.log("Collision", this.id, other.id, direction, this.object.colorCounter);
+            }
+        });
+
+        const points2 = [
+            {x: -30, y: -10},
+            {x: 30, y: -15},
+            {x: 10, y: 30},
+            {x: -15, y: 30},
+        ];
+        const horizontallyMovingBody = Raw.scenegraph.add({
+            id: "b",
+            hitbox: points2,
+            colorCounter: 1,
+            update: function() {
+                const speed = 0.5;
+                this.position.y = 10;
+                this.position.x = Raw.lerp(-110, 40, Raw.triangleWave(Raw.timeSeconds * speed));
+            },
+            draw: function(ctx, canvas) {
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(points2[0].x, points2[0].y);
+                for (let i = 1; i < points2.length; i++) {
+                    ctx.lineTo(points2[i].x, points2[i].y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                
+                drawText(ctx, this.object.colorCounter);
+            },
+            oncollision: function(other, direction) {
+                this.object.colorCounter += direction == "in" ? 1 : -1;
+                direction == "in" && pauseFor(1);           
+            }
+        });
+
+        const points3 = [ { x: -25, y: -25 }, { x: 25, y: -25 }, { x: 25, y: 25 }, { x: -25, y: 25 } ];
+
+        const movingBodyHitter = Raw.scenegraph.add({
+            id: "c",
+            //origin: { x: 50/2, y: 50/2 },
+            colorCounter: 1,
+            hitbox: points3,
+            draw: function(ctx, canvas) {
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(points3[0].x, points3[0].y);
+                for (let i = 1; i < points3.length; i++) {
+                    ctx.lineTo(points3[i].x, points3[i].y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+
+                drawText(ctx, this.object.colorCounter);
+            },
+            oncollision: function(other, direction) {
+                this.object.colorCounter += direction == "in" ? 1 : -1;   
+                direction == "in" && pauseFor(1);    
+            }
+        });
+        movingBodyHitter.position = { x: 5+25, y: -85+25 };
+        Raw.bringToBack(movingBodyHitter);
+
+        const pointsConcave = [
+            {x: -10, y: -40},
+            {x: -10, y: 20},
+            {x: 10, y: 20},
+            {x: 10, y: -20},
+            {x: 50, y: -20},
+            {x: 50, y: -40},
+        ];
+        const concave = Raw.scenegraph.add({
+            id: "d",
+            hitbox: pointsConcave,
+            colorCounter: 1,
+            update: function() {
+                const speed = 0.33;
+                this.position.x = Raw.lerp(-150, 50, Raw.triangleWave(Raw.timeSeconds * speed));
+                this.position.y = Raw.lerp(-50, -10, Raw.triangleWave(Raw.timeSeconds * speed));
+
+                this.rotation = Raw.lerp(0, Math.PI/3, Raw.triangleWave(Raw.timeSeconds * speed));
+            },
+            draw: function(ctx, canvas) {
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(pointsConcave[0].x, pointsConcave[0].y);
+                for (let i = 1; i < pointsConcave.length; i++) {
+                    ctx.lineTo(pointsConcave[i].x, pointsConcave[i].y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+
+                drawText(ctx, this.object.colorCounter);
+            },
+            oncollision: function(other, direction) {
+                this.object.colorCounter += direction == "in" ? 1 : -1;
+                direction == "in" && pauseFor(1);
+            }
+        }); 
+        concave.position = { x: 0, y: -50 };
+    </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Raw</title>
+        <script src="../dist/raw.build.js"></script>
+
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            #myContainer {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head> 
+<body>
+    <div id="myContainer">
+        <canvas id="myCanvas"></canvas>
+    </div>
+
+    <script>
+        /// Dragging with mouse and touch
+
+        Raw.init(document.getElementById('myCanvas'));
+        Raw.settings.clearColor = "#000";
+
+        function loop() {
+            Raw.onFrame();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+
+        window.addEventListener("keydown", (event) => {
+            event.key == "d" && (Raw.settings.debug = !Raw.settings.debug);
+        });
+
+        function createSlider(parameter) {
+            const group = Raw.scenegraph.add({
+                draw: function(ctx, canvas) {
+                    ctx.fillStyle = "#fff";
+                    ctx.strokeStyle = "#fff";
+                    ctx.lineWidth = 2;
+                },
+            });
+
+            const labelHeight = 16;
+            const sliderHeight = 150;
+            const draggerSize = 20;
+
+            const label = group.add({
+                draw: function(ctx, canvas) {
+                    ctx.font = `${labelHeight}px monospace`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("slider", 0, 0);
+                },
+            });
+
+            const line = group.add({
+                draw: function(ctx, canvas) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, sliderHeight);
+                    ctx.stroke();
+                },
+            });
+
+            line.position = {x: 0, y: labelHeight};
+
+            const dragger = line.add({
+                origin: {x: draggerSize / 2, y: draggerSize / 2},
+                hitbox: [
+                    {x: -draggerSize/2, y: -draggerSize/2}, 
+                    {x: draggerSize/2, y: -draggerSize/2}, 
+                    {x: draggerSize/2, y: draggerSize/2},
+                    {x: -draggerSize/2, y: draggerSize/2}
+                ],
+                update: function() {
+                    this.position.x = 0;
+                    this.position.y = Raw.clamp(this.position.y, 0, sliderHeight);
+                },
+                draw: function(ctx, canvas) {
+                    ctx.beginPath();
+                    ctx.roundRect(0, 0, draggerSize, draggerSize, 5);
+                    ctx.fill();
+                },
+                onmousedown: function(event) {
+                    Raw.startDrag(this.position, event);
+                },
+            });
+
+            dragger.position.y = 40;
+
+            return group;
+        }
+
+        function createAreaSlider() {
+            const group = Raw.scenegraph.add({
+                draw: function(ctx, canvas) {
+                    ctx.fillStyle = "#fff";
+                    ctx.strokeStyle = "#fff";
+                    ctx.lineWidth = 2;
+                },
+            });
+
+            const labelHeight = 16;
+            const areaSize = 125;
+            const draggerSize = 20;
+            const crosshairSize = 8;
+
+            const label = group.add({
+                draw: function(ctx, canvas) {
+                    ctx.font = `${labelHeight}px monospace`;
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("area", 0, 0);
+                },
+            });
+
+            const box = group.add({
+                draw: function(ctx, canvas) {
+                    ctx.strokeRect(0, 0, areaSize, areaSize);
+                },    
+            });
+
+            box.position = {x: 0, y: labelHeight};
+
+            const dragger = box.add({
+                origin: {x: draggerSize / 2, y: draggerSize / 2},
+                hitbox: [
+                    {x: -draggerSize/2, y: -draggerSize/2}, 
+                    {x: draggerSize/2, y: -draggerSize/2}, 
+                    {x: draggerSize/2, y: draggerSize/2},
+                    {x: -draggerSize/2, y: draggerSize/2},
+                ],
+                update: function() {
+                    this.position.x = Raw.clamp(this.position.x, 0, areaSize);
+                    this.position.y = Raw.clamp(this.position.y, 0, areaSize);
+                },
+                draw: function(ctx, canvas) {
+                    ctx.beginPath();
+                    ctx.roundRect(0, 0, draggerSize, draggerSize, 3);
+                    ctx.fill();
+                },
+                onmousedown: function(event) {
+                    Raw.startDrag(this.position, event);
+                },
+            });
+            dragger.position = {x: 100, y: 40};
+
+            const value = group.add({
+                draw: function(ctx, canvas) {
+                    ctx.fillStyle = "#fff";
+                    ctx.font = `${labelHeight}px monospace`;
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(Raw.pretty(dragger.position, 0, 3), 0, 0);
+                },
+            });
+
+            value.position = {x: 0, y: labelHeight + areaSize + labelHeight};
+
+            return group;
+        }
+
+
+        function createKnob() {
+            const group = Raw.scenegraph.add({
+                draw: function(ctx, canvas) {
+                    ctx.fillStyle = "#fff";
+                    ctx.strokeStyle = "#fff";
+                    ctx.lineWidth = 2;
+                },
+            });
+
+            const labelHeight = 16;
+            const knobSize = 80;
+            const dragSize = knobSize * 1.5
+
+            const label = group.add({
+                draw: function(ctx, canvas) {
+                    ctx.font = `${labelHeight}px monospace`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("knob", 0, 0);
+                },
+            });
+
+            const draggerValue = {x: 0, y: -30};
+
+            const knob = group.add({
+                origin: {x: knobSize / 2, y: knobSize / 2},
+                hitbox: [
+                    {x: -knobSize/2, y: -knobSize/2}, 
+                    {x: knobSize/2, y: -knobSize/2}, 
+                    {x: knobSize/2, y: knobSize/2},
+                    {x: -knobSize/2, y: knobSize/2}
+                ],
+                draw: function(ctx, canvas) {
+                    // draw circle on canvas with diameter knobSize
+                    ctx.beginPath();
+                    ctx.arc(knobSize / 2, knobSize / 2, knobSize / 2 - 2, 0, Math.PI * 2);
+                    ctx.stroke();
+                },
+                onmousedown: function(event) {
+                    Raw.startDrag(draggerValue, event);
+                },
+            });
+
+            knob.position = {x: 0, y: labelHeight + knobSize / 2};
+
+            const indicatorLength = knobSize / 3;
+            const indicator = knob.add({
+                id: "indicator",
+                update: function() {
+                    draggerValue.y = Raw.clamp(draggerValue.y, 0, -100);
+                    const value = Raw.map(draggerValue.y, 0, -100, -1, 1);
+                    this.rotation = value * Math.PI * 0.8;
+                },
+                draw: function(ctx, canvas) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, -indicatorLength);
+                    ctx.stroke();
+                }
+            });
+            indicator.position = {x: knobSize / 2, y: knobSize / 2};
+
+            return group;
+        }
+
+        const sliderAmplitude = createSlider();
+        sliderAmplitude.position = {x: -130, y: -75};
+
+        const areaSlider = createAreaSlider();
+        areaSlider.position = {x: -80, y: -75};
+
+        const knob = createKnob();
+        knob.position = {x: 120, y: -25};
+
+        console.log("Scenegraph:", Raw.scenegraph);
+    </script>
+</body>
+</html>
