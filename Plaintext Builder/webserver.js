@@ -9,7 +9,7 @@ const port = 8080;
 const server = http.createServer((req, res) => {
   console.log(`Request for ${req.url} received at ${new Date().toISOString()}`);
   // Construct the file path relative to the current directory
-  let filePath = '.' + req.url;
+  let filePath = '.' + decodeURI(req.url);
   if (filePath === './') {
     filePath = './index.html'; // Serve index.html by default
   }

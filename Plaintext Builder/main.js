@@ -79,3 +79,5 @@ fs.watch(WATCH_DIR, { recursive: true }, (eventType, filename) => {
 
 build();
 console.log(`Watching ${WATCH_DIR} ...`);
+
+// TODO: Den watcher bare mappen til rotfilen, ikke mappen til alle inkluderte filer
