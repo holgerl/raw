@@ -133,6 +133,8 @@ function gridDistribution(w, h = null) {
         const y = index.y / maxIndex.y;
         const centeredIndex = subtract(index, scale(subtract(dimensions, {x: 1, y: 1}), 1/2));
         const centered = {x: lerp(-1, 1, x), y: lerp(-1, 1, y), index: centeredIndex};
+        if (w === 1) centered.x = 0;
+        if (h === 1) centered.y = 0;
         const size = {x: 1/dimensions.x, y: 1/dimensions.y};
         const topLeft = {x: x * (1 - 1/dimensions.x), y: y * (1 - 1/dimensions.y)};
         points.push({x, y, index, topLeft, size, centered});
