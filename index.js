@@ -411,7 +411,7 @@ const Raw = (function () {
         drag.target = null;
     }
 
-    Raw.init = function(canvasElement) {
+    Raw.init = function(canvasElement, captureTouchScroll = true) {
         canvas = canvasElement;
 
         // TODO: Rename alle disse til pointerXX
@@ -427,11 +427,12 @@ const Raw = (function () {
         s.width = "inherit"; // To fill parent
         s.height = "inherit";
         s.display = "block"; // To not be inline
+
         // For dragging:
-        s.touchAction = "none";
+        if (captureTouchScroll) s.touchAction = "none";
         s.userSelect = "none";
 
-        el('touchmove', e => e.preventDefault(), { passive: false });
+        if (captureTouchScroll) el('touchmove', e => e.preventDefault(), { passive: false });
 
         ctx = canvas.getContext("2d");
 
