@@ -415,7 +415,7 @@ const Raw = (function () {
         canvas = canvasElement;
 
         // TODO: Rename alle disse til pointerXX
-        const el = canvas.addEventListener;
+        const el = canvas.addEventListener.bind(canvas);
         el("pointerdown", onMouseDown);
         el("pointerup", onMouseUp);
         el("pointermove", onMouseMove);
